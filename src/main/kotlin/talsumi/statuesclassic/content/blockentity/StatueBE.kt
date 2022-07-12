@@ -9,10 +9,12 @@ import net.minecraft.util.math.BlockPos
 import talsumi.statues.networking.ServerPacketsOut
 import talsumi.statuesclassic.content.ModBlockEntities
 import talsumi.statuesclassic.marderlib.storage.item.ItemStackHandler
+import java.util.*
 
 class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.statue, pos, state), IUpdatableBlockEntity {
 
     val inventory = ItemStackHandler(6, ::onContentsChanged)
+    var playerUuid: UUID? = null
     var inSetup = true
     var leftArmRaise = 0f
     var leftArmRotate = 0f
@@ -53,6 +55,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         super.readNbt(nbt)
         inventory.load(nbt.getCompound("inventory"))
         inSetup = nbt.getBoolean("in_setup")
+        playerUuid = if (nbt.contains("player")) nbt.getUuid("player") else null
         leftArmRaise = nbt.getFloat("leftArmRaise")
         leftArmRotate = nbt.getFloat("leftArmRotate")
         rightArmRaise = nbt.getFloat("rightArmRaise")
@@ -72,6 +75,8 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         super.writeNbt(nbt)
         nbt.put("inventory", inventory.save())
         nbt.putBoolean("in_setup", inSetup)
+        if (playerUuid != null)
+            nbt.putUuid("player", playerUuid)
         nbt.putFloat("leftArmRaise", leftArmRaise)
         nbt.putFloat("leftArmRotate", leftArmRotate)
         nbt.putFloat("rightArmRaise", rightArmRaise)

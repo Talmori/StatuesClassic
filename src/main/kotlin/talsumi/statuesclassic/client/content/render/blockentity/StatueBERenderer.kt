@@ -33,7 +33,6 @@ import talsumi.statuesclassic.content.blockentity.StatueBE
 
 class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
 
-
     override fun render(statue: StatueBE, tickDelta: Float, matrices: MatrixStack, vertexConsumers: VertexConsumerProvider, light: Int, overlay: Int)
     {
         matrices.push()

@@ -26,10 +26,13 @@
 
 package talsumi.statuesclassic.client
 import net.fabricmc.api.ClientModInitializer
+import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientBlockEntityEvents
+import net.minecraft.client.render.RenderLayer
 import talsumi.railexpansion.client.events.ClientEventHandlers
 import talsumi.statues.networking.ClientPacketHandlers
 import talsumi.statuesclassic.client.content.ModClientScreens
+import talsumi.statuesclassic.content.ModBlocks
 
 @Suppress("UNUSED")
 object StatuesClassicClient: ClientModInitializer {
@@ -39,5 +42,14 @@ object StatuesClassicClient: ClientModInitializer {
         ClientPacketHandlers.register()
         ModClientScreens.wake()
         ClientBlockEntityEvents.BLOCK_ENTITY_LOAD.register(ClientEventHandlers::onBlockEntityLoad)
+        registerBlockRenderLayers()
+    }
+
+    private fun registerBlockRenderLayers()
+    {
+        BlockRenderLayerMap.INSTANCE.putBlocks(
+            RenderLayer.getTranslucent(),
+            ModBlocks.statue_child,
+            ModBlocks.statue_parent)
     }
 }

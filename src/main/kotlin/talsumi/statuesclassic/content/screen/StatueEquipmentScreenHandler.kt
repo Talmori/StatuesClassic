@@ -55,7 +55,9 @@ class StatueEquipmentScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val
     fun setup(pInv: PlayerInventory, inv: Inventory)
     {
         addPlayerInventory(pInv, 8, 84)
-        addSlot(BetterSlot(inv, 0, 80, 35))
+        addSlotBox(inv, 0, 80, 8, 1, 4, 18, 18)
+        addSlot(inv, 4, 61, 34)
+        addSlot(inv, 5, 99, 34)
     }
 
     override fun canUse(player: PlayerEntity): Boolean
