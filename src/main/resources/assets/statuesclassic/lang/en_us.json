@@ -1,0 +1,8 @@
+{
+  "itemGroup.statuesclassic.statuesclassic": "Statues Classic",
+  "item.statuesclassic.statue_hammer": "Statue Hammer",
+  "block.statuesclassic.statue_parent": "Statue",
+  "block.statuesclassic.statue_child": "Statue",
+  "tooltip.statuesclassic.statue_hammer": "Use on a pillar of two blocks",
+
+}
