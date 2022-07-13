@@ -61,6 +61,21 @@ abstract class BaseWidget(x: Int, y: Int, width: Int, height: Int): ClickableWid
 
     }
 
+    open fun onGeneralDragged(mouseX: Double, mouseY: Double, deltaX: Double, deltaY: Double)
+    {
+
+    }
+
+    open fun onLeftDragged(mouseX: Double, mouseY: Double, deltaX: Double, deltaY: Double)
+    {
+
+    }
+
+    open fun onRightDragged(mouseX: Double, mouseY: Double, deltaX: Double, deltaY: Double)
+    {
+
+    }
+
     open fun isHovered(x: Int, y: Int, mouseX: Int, mouseY: Int): Boolean
     {
         return mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height

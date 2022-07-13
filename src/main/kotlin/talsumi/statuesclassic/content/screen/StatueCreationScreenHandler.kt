@@ -28,28 +28,39 @@ package talsumi.statuesclassic.content.screen
 
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.NamedScreenHandlerFactory
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
+import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
+import talsumi.statues.networking.ClientPacketsOut
 import talsumi.statuesclassic.content.ModScreenHandlers
 import talsumi.statuesclassic.content.blockentity.StatueBE
+import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.marderlib.screenhandler.EnhancedScreenHandler
 
 
-class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val statue: StatueBE?) : EnhancedScreenHandler(type, syncId) {
+class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val parentPos: BlockPos?, val world: World?) : EnhancedScreenHandler(type, syncId) {
 
     //Client Constructor
-    constructor(syncId: Int, inv: PlayerInventory) : this(syncId, null)
+    constructor(syncId: Int, inv: PlayerInventory) : this(syncId, null, null)
 
     //Common Constructor
-    constructor(syncId: Int, statue: StatueBE?) : this(ModScreenHandlers.statue_equipment_screen, syncId, statue)
+    constructor(syncId: Int, parentPos: BlockPos?, world: World?) : this(ModScreenHandlers.statue_creation_screen, syncId, parentPos, world)
     {
         setup()
     }
 
     fun setup()
+    {
+
+    }
+
+    fun form(data: StatueData)
     {
 
     }
@@ -60,12 +71,12 @@ class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val 
     }
 
     companion object {
-        fun makeFactory(statue: StatueBE): NamedScreenHandlerFactory
+        fun makeFactory(pos: BlockPos, world: World): NamedScreenHandlerFactory
         {
             return object: NamedScreenHandlerFactory {
                 override fun createMenu(syncId: Int, inv: PlayerInventory, player: PlayerEntity): ScreenHandler?
                 {
-                    return StatueCreationScreenHandler(syncId, statue)
+                    return StatueCreationScreenHandler(syncId, pos, world)
                 }
                 override fun getDisplayName(): Text {
                     return TranslatableText("")

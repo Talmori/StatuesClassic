@@ -34,12 +34,16 @@ import net.minecraft.server.network.ServerPlayNetworkHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.registry.Registry
 import talsumi.statuesclassic.content.blockentity.IUpdatableBlockEntity
+import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
+import talsumi.statuesclassic.core.StatueData
+import talsumi.statuesclassic.marderlib.screenhandler.EnhancedScreenHandler
 
 object ServerPacketHandlers {
 
     fun register()
     {
         ServerPlayNetworking.registerGlobalReceiver(ClientPacketsOut.request_block_entity_update, ::receiveRequestBlockEntityUpdatePacket)
+        ServerPlayNetworking.registerGlobalReceiver(ClientPacketsOut.form_statue, ::receiveFormStatuePacket)
     }
 
     private fun receiveRequestBlockEntityUpdatePacket(server: MinecraftServer, player: ServerPlayerEntity, handler: ServerPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
@@ -51,6 +55,15 @@ object ServerPacketHandlers {
         server.execute {
             if (be is IUpdatableBlockEntity)
                 ServerPacketsOut.sendUpdateBlockEntityPacket(be, player)
+        }
+    }
+
+    private fun receiveFormStatuePacket(server: MinecraftServer, player: ServerPlayerEntity, handler: ServerPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
+    {
+        val data = StatueData.fromPacket(buf)
+        server.execute {
+            if (player.currentScreenHandler is StatueCreationScreenHandler)
+                (player.currentScreenHandler as StatueCreationScreenHandler).form(data)
         }
     }
 }

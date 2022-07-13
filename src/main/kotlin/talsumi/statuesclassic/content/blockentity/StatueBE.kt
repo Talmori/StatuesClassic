@@ -8,6 +8,7 @@ import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.math.BlockPos
 import talsumi.statues.networking.ServerPacketsOut
 import talsumi.statuesclassic.content.ModBlockEntities
+import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.marderlib.storage.item.ItemStackHandler
 import java.util.*
 
@@ -15,19 +16,8 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
 
     val inventory = ItemStackHandler(6, ::onContentsChanged)
     var playerUuid: UUID? = null
-    var inSetup = true
-    var leftArmRaise = 0f
-    var leftArmRotate = 0f
-    var rightArmRaise = 0f
-    var rightArmRotate = 0f
-    var leftLegRaise = 0f
-    var leftLegRotate = 0f
-    var rightLegRaise = 0f
-    var rightLegRotate = 0f
-    var headRaise = 0f
-    var headRotate = 0f
-    var masterRaise = 0f
-    var masterRotate = 0f
+    var hasSetup = true
+    var data: StatueData? = null
 
     fun sendUpdatePacket()
     {
@@ -43,51 +33,33 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
     override fun writeUpdatePacket(buf: PacketByteBuf)
     {
         inventory.saveToByteBuf(buf)
+        buf.writeBoolean(data != null)
+        data?.writePacket(buf)
     }
 
     override fun receiveUpdatePacket(buf: PacketByteBuf)
     {
         inventory.loadFromByteBuf(buf)
+        if (buf.readBoolean())
+            data = StatueData.fromPacket(buf)
     }
 
     override fun readNbt(nbt: NbtCompound)
     {
         super.readNbt(nbt)
         inventory.load(nbt.getCompound("inventory"))
-        inSetup = nbt.getBoolean("in_setup")
-        playerUuid = if (nbt.contains("player")) nbt.getUuid("player") else null
-        leftArmRaise = nbt.getFloat("leftArmRaise")
-        leftArmRotate = nbt.getFloat("leftArmRotate")
-        rightArmRaise = nbt.getFloat("rightArmRaise")
-        rightArmRotate = nbt.getFloat("rightArmRotate")
-        leftLegRaise = nbt.getFloat("leftLegRaise")
-        leftLegRotate = nbt.getFloat("leftLegRotate")
-        rightLegRaise = nbt.getFloat("rightLegRaise")
-        rightLegRotate = nbt.getFloat("rightLegRotate")
-        headRaise = nbt.getFloat("headRaise")
-        headRotate = nbt.getFloat("headRotate")
-        masterRaise = nbt.getFloat("masterRaise")
-        masterRotate = nbt.getFloat("masterRotate")
+        hasSetup = nbt.getBoolean("has_setup")
+        if (hasSetup) {
+            data = StatueData.load(nbt.getCompound("statue_data"))
+        }
     }
 
     override fun writeNbt(nbt: NbtCompound)
     {
         super.writeNbt(nbt)
         nbt.put("inventory", inventory.save())
-        nbt.putBoolean("in_setup", inSetup)
-        if (playerUuid != null)
-            nbt.putUuid("player", playerUuid)
-        nbt.putFloat("leftArmRaise", leftArmRaise)
-        nbt.putFloat("leftArmRotate", leftArmRotate)
-        nbt.putFloat("rightArmRaise", rightArmRaise)
-        nbt.putFloat("rightArmRotate", rightArmRotate)
-        nbt.putFloat("leftLegRaise", leftLegRaise)
-        nbt.putFloat("leftLegRotate", leftLegRotate)
-        nbt.putFloat("rightLegRaise", rightLegRaise)
-        nbt.putFloat("rightLegRotate", rightLegRotate)
-        nbt.putFloat("headRaise", headRaise)
-        nbt.putFloat("headRotate", headRotate)
-        nbt.putFloat("masterRaise", masterRaise)
-        nbt.putFloat("masterRotate", masterRotate)
+        nbt.putBoolean("has_setup", hasSetup)
+        if (data != null)
+            nbt.put("statue_data", data!!.save())
     }
 }

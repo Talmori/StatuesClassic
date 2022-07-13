@@ -138,7 +138,7 @@ class StatueModel(val slim: Boolean, val username: String, layerFactory: Functio
 
     fun setAngles(statue: StatueBE)
     {
-        head.setAngles(statue.headRaise, statue.headRotate, 0f)
+
     }
 
     override fun render(matrices: MatrixStack, vertices: VertexConsumer, light: Int, overlay: Int, red: Float, green: Float, blue: Float, alpha: Float)

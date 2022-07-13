@@ -52,6 +52,9 @@ abstract class EnhancedScreen<T: ScreenHandler>(handler: T, inventory: PlayerInv
      */
     fun getWidgets(): List<BaseWidget> = widgets
 
+    fun getScreenX(): Int = x
+    fun getScreenY(): Int = y
+
     override fun drawBackground(matrices: MatrixStack, delta: Float, mouseX: Int, mouseY: Int)
     {
         RenderSystem.setShader { GameRenderer.getPositionTexShader() }
@@ -87,6 +90,7 @@ abstract class EnhancedScreen<T: ScreenHandler>(handler: T, inventory: PlayerInv
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean
     {
+        var clicked = false
         for (widget in widgets) {
             if (widget.isHovered(widget.x + x, widget.y + y, mouseX.toInt(), mouseY.toInt())) {
                 widget.onGeneralClicked(mouseX, mouseY)
@@ -95,10 +99,28 @@ abstract class EnhancedScreen<T: ScreenHandler>(handler: T, inventory: PlayerInv
                 else
                     widget.onRightClicked(mouseX, mouseY)
 
-                return true
+                clicked = true
             }
         }
 
-        return super.mouseClicked(mouseX, mouseY, button)
+        return if (clicked) true else super.mouseClicked(mouseX, mouseY, button)
+    }
+
+    override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean
+    {
+        var dragged = false
+        for (widget in widgets) {
+            if (widget.isHovered(widget.x + x, widget.y + y, mouseX.toInt(), mouseY.toInt())) {
+                widget.onGeneralDragged(mouseX, mouseY, deltaX, deltaY)
+                if (button == 0)
+                    widget.onLeftDragged(mouseX, mouseY, deltaX, deltaY)
+                else
+                    widget.onRightDragged(mouseX, mouseY, deltaX, deltaY)
+
+                dragged = true
+            }
+        }
+
+        return if (dragged) true else return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
     }
 }
