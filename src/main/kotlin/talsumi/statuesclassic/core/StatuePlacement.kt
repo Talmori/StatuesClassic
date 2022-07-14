@@ -1,5 +1,6 @@
 package talsumi.statuesclassic.core
 
+import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 
@@ -14,5 +15,13 @@ object StatuePlacement {
             return false
 
         return true
+    }
+
+    fun canCreateStatueHere(world: World, pos: BlockPos): Boolean
+    {
+        val state = world.getBlockState(pos)
+        val stateUp = world.getBlockState(pos.up())
+
+        return isBlockValidForStatue(world, pos) && isBlockValidForStatue(world, pos.up()) && state == stateUp
     }
 }

@@ -32,6 +32,7 @@ import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.NamedScreenHandlerFactory
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerType
+import net.minecraft.server.MinecraftServer
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Identifier
@@ -40,8 +41,10 @@ import net.minecraft.world.World
 import talsumi.statues.networking.ClientPacketsOut
 import talsumi.statuesclassic.content.ModScreenHandlers
 import talsumi.statuesclassic.content.blockentity.StatueBE
+import talsumi.statuesclassic.core.StatueCreation
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.marderlib.screenhandler.EnhancedScreenHandler
+import talsumi.statuesclassic.mixininterfaces.StatuesClassicPlayerListenerGrabber
 
 
 class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val parentPos: BlockPos?, val world: World?) : EnhancedScreenHandler(type, syncId) {
@@ -62,7 +65,10 @@ class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val 
 
     fun form(data: StatueData)
     {
-
+        if (parentPos != null && world != null)
+            StatueCreation.tryCreateStatue(parentPos!!, world!!, data)
+        for (listener in getListeners())
+            listener.statuesclassic_getOwningPlayer().closeHandledScreen()
     }
 
     override fun canUse(player: PlayerEntity): Boolean

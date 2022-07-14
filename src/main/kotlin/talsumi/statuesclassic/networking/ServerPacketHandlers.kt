@@ -61,6 +61,7 @@ object ServerPacketHandlers {
     private fun receiveFormStatuePacket(server: MinecraftServer, player: ServerPlayerEntity, handler: ServerPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
     {
         val data = StatueData.fromPacket(buf)
+
         server.execute {
             if (player.currentScreenHandler is StatueCreationScreenHandler)
                 (player.currentScreenHandler as StatueCreationScreenHandler).form(data)

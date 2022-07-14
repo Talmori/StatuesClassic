@@ -7,6 +7,7 @@ import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.math.BlockPos
 import talsumi.statues.networking.ServerPacketsOut
+import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.content.ModBlockEntities
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.marderlib.storage.item.ItemStackHandler
@@ -16,8 +17,18 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
 
     val inventory = ItemStackHandler(6, ::onContentsChanged)
     var playerUuid: UUID? = null
-    var hasSetup = true
+    var hasSetup = false
     var data: StatueData? = null
+    var statueId = UUID.randomUUID()
+
+    fun setup(uuid: UUID, data: StatueData)
+    {
+        playerUuid = uuid
+        this.data = data
+        hasSetup = true
+        StatuesClassic.LOGGER.info("Created statue at $pos, for player $uuid")
+        sendUpdatePacket()
+    }
 
     fun sendUpdatePacket()
     {
@@ -33,6 +44,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
     override fun writeUpdatePacket(buf: PacketByteBuf)
     {
         inventory.saveToByteBuf(buf)
+        buf.writeUuid(playerUuid)
         buf.writeBoolean(data != null)
         data?.writePacket(buf)
     }
@@ -40,6 +52,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
     override fun receiveUpdatePacket(buf: PacketByteBuf)
     {
         inventory.loadFromByteBuf(buf)
+        playerUuid = buf.readUuid()
         if (buf.readBoolean())
             data = StatueData.fromPacket(buf)
     }
@@ -51,6 +64,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         hasSetup = nbt.getBoolean("has_setup")
         if (hasSetup) {
             data = StatueData.load(nbt.getCompound("statue_data"))
+            playerUuid = nbt.getUuid("player_uuid")
         }
     }
 
@@ -61,5 +75,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         nbt.putBoolean("has_setup", hasSetup)
         if (data != null)
             nbt.put("statue_data", data!!.save())
+        if (playerUuid != null)
+            nbt.putUuid("player_uuid", playerUuid)
     }
 }

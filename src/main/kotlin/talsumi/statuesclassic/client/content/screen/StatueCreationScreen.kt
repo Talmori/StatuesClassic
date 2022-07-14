@@ -26,12 +26,10 @@
 
 package talsumi.statuesclassic.client.content.screen
 
-import com.mojang.authlib.AuthenticationService
-import com.mojang.authlib.BaseUserAuthentication
+import com.mojang.authlib.Agent
 import com.mojang.authlib.GameProfile
-import com.mojang.authlib.minecraft.BaseMinecraftSessionService
+import com.mojang.authlib.ProfileLookupCallback
 import com.mojang.authlib.minecraft.MinecraftProfileTexture
-import com.mojang.authlib.yggdrasil.*
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.widget.TextFieldWidget
 import net.minecraft.client.util.math.MatrixStack
@@ -40,13 +38,13 @@ import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Identifier
+import talsumi.statues.networking.ClientPacketsOut
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.client.content.widgets.ButtonWidget
 import talsumi.statuesclassic.client.content.widgets.JoystickWidget
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.marderlib.screen.EnhancedScreen
-import java.util.*
 
 class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: PlayerInventory?, title: Text?) :
     EnhancedScreen<StatueCreationScreenHandler>(handler, inventory, title, Identifier(StatuesClassic.MODID, "textures/gui/statue_creation.png")) {
@@ -61,6 +59,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     private var lastName: String = ""
     private var lookupDelay = 0
     private var data = StatueData("", 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
+    private var skin: Identifier? = null
 
     init
     {
@@ -122,6 +121,8 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
             180f * joystick5.getXPosition(),
             180f * joystick6.getYPosition(),
             180f * joystick6.getXPosition())
+
+        ClientPacketsOut.sendFormStatuePacket(data)
     }
 
     fun randomize()
@@ -134,12 +135,27 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     override fun handledScreenTick()
     {
         if ((nameField.text.isNotEmpty() && nameField.text != lastName) || lookupDelay > 0) {
+            lookupDelay++
+
             if (lookupDelay >= 20) {
                 lookupDelay = 0
-                //MinecraftClient.getInstance().skinProvider.loadSkin(profile, ::skinAvailable, true)
+                //TODO: Query UUID from server
+                MinecraftClient.getInstance().server?.gameProfileRepo?.findProfilesByNames(arrayOf(lastName), Agent.MINECRAFT, object: ProfileLookupCallback {
+                    override fun onProfileLookupSucceeded(profile: GameProfile)
+                    {
+                        MinecraftClient.getInstance().skinProvider.loadSkin(profile, ::skinAvailable, true)
+                    }
+
+                    override fun onProfileLookupFailed(profile: GameProfile, exception: Exception)
+                    {
+                        skin = null
+                    }
+                })
             }
-            lookupDelay++
+
             lastName = nameField.text
+            if (lastName.isEmpty())
+                skin = null
         }
     }
 
@@ -149,9 +165,17 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
         nameField.render(matrices, mouseX, mouseY, delta)
     }
 
+
     private fun skinAvailable(type: MinecraftProfileTexture.Type, id: Identifier, texture: MinecraftProfileTexture)
     {
-        println("Skin available: $id")
+        skin = id
+    }
+
+    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean
+    {
+        if (keyCode == 256)
+            client!!.player!!.closeHandledScreen()
+        return if (!nameField.keyPressed(keyCode, scanCode, modifiers) && !nameField.isActive) super.keyPressed(keyCode, scanCode, modifiers) else true
     }
 
     override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean
