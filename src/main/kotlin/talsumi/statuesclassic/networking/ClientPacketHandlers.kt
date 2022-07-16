@@ -32,6 +32,7 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.registry.Registry
+import talsumi.statuesclassic.client.content.screen.StatueCreationScreen
 import talsumi.statuesclassic.content.blockentity.IUpdatableBlockEntity
 
 object ClientPacketHandlers {
@@ -39,21 +40,35 @@ object ClientPacketHandlers {
     fun register()
     {
         ClientPlayNetworking.registerGlobalReceiver(ServerPacketsOut.update_block_entity, ::receiveUpdateBlockEntityPacket)
+        ClientPlayNetworking.registerGlobalReceiver(ServerPacketsOut.send_statue_uuid, ::receiveStatueUuidPacket)
     }
 
     fun receiveUpdateBlockEntityPacket(client: MinecraftClient, handler: ClientPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
     {
         val pos = buf.readBlockPos()
         val type = buf.readIdentifier()
+
         buf.retain()
         client.execute {
-            val world = client.world
-            val be = world?.getBlockEntity(pos, Registry.BLOCK_ENTITY_TYPE.get(type))?.orElse(null) ?: return@execute
+            val be = client.world?.getBlockEntity(pos, Registry.BLOCK_ENTITY_TYPE.get(type))?.orElse(null) ?: return@execute
 
             if (be is IUpdatableBlockEntity)
                 be.receiveUpdatePacket(buf)
 
             buf.release()
+        }
+    }
+
+    fun receiveStatueUuidPacket(client: MinecraftClient, handler: ClientPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
+    {
+        val username = buf.readString()
+        val uuid = buf.readUuid()
+
+        client.execute {
+            val screen = client.currentScreen
+
+            if (screen is StatueCreationScreen)
+                screen.receiveUuid(username, uuid)
         }
     }
 }

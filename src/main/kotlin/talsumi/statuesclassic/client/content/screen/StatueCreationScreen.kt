@@ -26,6 +26,7 @@
 
 package talsumi.statuesclassic.client.content.screen
 
+import ca.weblite.objc.Client
 import com.mojang.authlib.Agent
 import com.mojang.authlib.GameProfile
 import com.mojang.authlib.ProfileLookupCallback
@@ -45,6 +46,7 @@ import talsumi.statuesclassic.client.content.widgets.JoystickWidget
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.marderlib.screen.EnhancedScreen
+import java.util.*
 
 class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: PlayerInventory?, title: Text?) :
     EnhancedScreen<StatueCreationScreenHandler>(handler, inventory, title, Identifier(StatuesClassic.MODID, "textures/gui/statue_creation.png")) {
@@ -57,8 +59,10 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     private val joystick6: JoystickWidget
     private lateinit var nameField: TextFieldWidget
     private var lastName: String = ""
+    private var uuid: UUID? = null
     private var lookupDelay = 0
-    private var data = StatueData("", 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
+    //TODO: This
+    private var data = StatueData(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
     private var skin: Identifier? = null
 
     init
@@ -75,6 +79,12 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
         val formButton = ButtonWidget(4, 184, 190, 20, 0, 208, ::form, TranslatableText("gui.statuesclassic.sculpt"))
 
         addWidgets(joystick1, joystick2, joystick3, joystick4, joystick5, joystick6, randomizeButton, formButton)
+    }
+
+    fun receiveUuid(username: String, uuid: UUID)
+    {
+        if (username == lastName)
+            this.uuid = uuid
     }
 
     override fun init()
@@ -107,8 +117,10 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
     fun form()
     {
+        if (uuid == null)
+            return
+
         val data = StatueData(
-            nameField.text,
         180f * joystick1.getYPosition(),
             180f * joystick1.getXPosition(),
             180f * joystick2.getYPosition(),
@@ -122,7 +134,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
             180f * joystick6.getYPosition(),
             180f * joystick6.getXPosition())
 
-        ClientPacketsOut.sendFormStatuePacket(data)
+        ClientPacketsOut.sendFormStatuePacket(uuid!!, data)
     }
 
     fun randomize()
@@ -137,20 +149,10 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
         if ((nameField.text.isNotEmpty() && nameField.text != lastName) || lookupDelay > 0) {
             lookupDelay++
 
-            if (lookupDelay >= 20) {
+            if (lookupDelay >= 40) {
                 lookupDelay = 0
-                //TODO: Query UUID from server
-                MinecraftClient.getInstance().server?.gameProfileRepo?.findProfilesByNames(arrayOf(lastName), Agent.MINECRAFT, object: ProfileLookupCallback {
-                    override fun onProfileLookupSucceeded(profile: GameProfile)
-                    {
-                        MinecraftClient.getInstance().skinProvider.loadSkin(profile, ::skinAvailable, true)
-                    }
-
-                    override fun onProfileLookupFailed(profile: GameProfile, exception: Exception)
-                    {
-                        skin = null
-                    }
-                })
+                //This will eventually update the uuid in this screen.
+                ClientPacketsOut.sendLookupUuidPacket(lastName)
             }
 
             lastName = nameField.text

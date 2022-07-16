@@ -4,8 +4,7 @@ import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import java.util.*
 
-class StatueData(var player: String,
-                 var leftArmRaise: Float,
+class StatueData(var leftArmRaise: Float,
                  var leftArmRotate: Float,
                  var rightArmRaise: Float,
                  var rightArmRotate: Float,
@@ -22,7 +21,6 @@ class StatueData(var player: String,
         fun fromPacket(buf: PacketByteBuf): StatueData
         {
             return StatueData(
-                buf.readString(),
                 buf.readFloat(),
                 buf.readFloat(),
                 buf.readFloat(),
@@ -40,25 +38,24 @@ class StatueData(var player: String,
 
         fun load(nbt: NbtCompound): StatueData
         {
-            return StatueData(player = nbt.getString("player"),
-            leftArmRaise = nbt.getFloat("leftArmRaise"),
-            leftArmRotate = nbt.getFloat("leftArmRotate"),
-            rightArmRaise = nbt.getFloat("rightArmRaise"),
-            rightArmRotate = nbt.getFloat("rightArmRotate"),
-            leftLegRaise = nbt.getFloat("leftLegRaise"),
-            leftLegRotate = nbt.getFloat("leftLegRotate"),
-            rightLegRaise = nbt.getFloat("rightLegRaise"),
-            rightLegRotate = nbt.getFloat("rightLegRotate"),
-            headRaise = nbt.getFloat("headRaise"),
-            headRotate = nbt.getFloat("headRotate"),
-            masterRaise = nbt.getFloat("masterRaise"),
-            masterRotate = nbt.getFloat("masterRotate"))
+            return StatueData(
+                leftArmRaise = nbt.getFloat("leftArmRaise"),
+                leftArmRotate = nbt.getFloat("leftArmRotate"),
+                rightArmRaise = nbt.getFloat("rightArmRaise"),
+                rightArmRotate = nbt.getFloat("rightArmRotate"),
+                leftLegRaise = nbt.getFloat("leftLegRaise"),
+                leftLegRotate = nbt.getFloat("leftLegRotate"),
+                rightLegRaise = nbt.getFloat("rightLegRaise"),
+                rightLegRotate = nbt.getFloat("rightLegRotate"),
+                headRaise = nbt.getFloat("headRaise"),
+                headRotate = nbt.getFloat("headRotate"),
+                masterRaise = nbt.getFloat("masterRaise"),
+                masterRotate = nbt.getFloat("masterRotate"))
         }
     }
 
     fun writePacket(buf: PacketByteBuf)
     {
-        buf.writeString(player)
         buf.writeFloat(leftArmRaise)
         buf.writeFloat(leftArmRotate)
         buf.writeFloat(rightArmRaise)
@@ -76,7 +73,6 @@ class StatueData(var player: String,
     fun save(): NbtCompound
     {
         val nbt = NbtCompound()
-        nbt.putString("player", player)
         nbt.putFloat("leftArmRaise", leftArmRaise)
         nbt.putFloat("leftArmRotate", leftArmRotate)
         nbt.putFloat("rightArmRaise", rightArmRaise)

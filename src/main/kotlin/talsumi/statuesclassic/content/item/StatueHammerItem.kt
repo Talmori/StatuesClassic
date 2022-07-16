@@ -35,10 +35,10 @@ class StatueHammerItem(settings: Settings) : Item(settings) {
 
         //Check up for second block
         if (world.getBlockState(up) == state && StatuePlacement.isBlockValidForStatue(world, up))
-            player.openHandledScreen(StatueCreationScreenHandler.makeFactory(pos, world))
+            player.openHandledScreen(StatueCreationScreenHandler.makeFactory(player, ctx.side, pos, world))
         //Check down for second block
         else if (world.getBlockState(down) == state && StatuePlacement.isBlockValidForStatue(world, down))
-            player.openHandledScreen(StatueCreationScreenHandler.makeFactory(down, world))
+            player.openHandledScreen(StatueCreationScreenHandler.makeFactory(player, ctx.side, down, world))
 
         return ActionResult.SUCCESS
     }

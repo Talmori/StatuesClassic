@@ -1,11 +1,14 @@
 package talsumi.statuesclassic.content.blockentity
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
+import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.registry.Registry
 import talsumi.statues.networking.ServerPacketsOut
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.content.ModBlockEntities
@@ -16,18 +19,21 @@ import java.util.*
 class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.statue, pos, state), IUpdatableBlockEntity {
 
     val inventory = ItemStackHandler(6, ::onContentsChanged)
+
+    var hasBeenSetup = false
     var playerUuid: UUID? = null
-    var hasSetup = false
     var data: StatueData? = null
+    var block: Block? = null
+
     var statueId = UUID.randomUUID()
 
-    fun setup(uuid: UUID, data: StatueData)
+    fun setup(block: Block, uuid: UUID, data: StatueData)
     {
         playerUuid = uuid
         this.data = data
-        hasSetup = true
-        StatuesClassic.LOGGER.info("Created statue at $pos, for player $uuid")
-        sendUpdatePacket()
+        this.block = block
+        hasBeenSetup = true
+        StatuesClassic.LOGGER.info("Created statue at $pos, for player $uuid, made of $block")
     }
 
     fun sendUpdatePacket()
@@ -43,28 +49,37 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
 
     override fun writeUpdatePacket(buf: PacketByteBuf)
     {
-        inventory.saveToByteBuf(buf)
-        buf.writeUuid(playerUuid)
-        buf.writeBoolean(data != null)
-        data?.writePacket(buf)
+        buf.writeBoolean(hasBeenSetup)
+        if (hasBeenSetup) {
+            inventory.saveToByteBuf(buf)
+            buf.writeUuid(playerUuid)
+            buf.writeBoolean(data != null)
+            data?.writePacket(buf)
+            buf.writeString(block!!.registryEntry.registryKey().value.toString())
+        }
     }
 
     override fun receiveUpdatePacket(buf: PacketByteBuf)
     {
-        inventory.loadFromByteBuf(buf)
-        playerUuid = buf.readUuid()
-        if (buf.readBoolean())
-            data = StatueData.fromPacket(buf)
+        hasBeenSetup = buf.readBoolean()
+        if (hasBeenSetup) {
+            inventory.loadFromByteBuf(buf)
+            playerUuid = buf.readUuid()
+            if (buf.readBoolean())
+                data = StatueData.fromPacket(buf)
+            block = Registry.BLOCK.get(Identifier(buf.readString()))
+        }
     }
 
     override fun readNbt(nbt: NbtCompound)
     {
         super.readNbt(nbt)
         inventory.load(nbt.getCompound("inventory"))
-        hasSetup = nbt.getBoolean("has_setup")
-        if (hasSetup) {
+        hasBeenSetup = nbt.getBoolean("has_setup")
+        if (hasBeenSetup) {
             data = StatueData.load(nbt.getCompound("statue_data"))
             playerUuid = nbt.getUuid("player_uuid")
+            block = Registry.BLOCK.get(Identifier(nbt.getString("block")))
         }
     }
 
@@ -72,10 +87,11 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
     {
         super.writeNbt(nbt)
         nbt.put("inventory", inventory.save())
-        nbt.putBoolean("has_setup", hasSetup)
-        if (data != null)
+        nbt.putBoolean("has_setup", hasBeenSetup)
+        if (hasBeenSetup) {
             nbt.put("statue_data", data!!.save())
-        if (playerUuid != null)
-            nbt.putUuid("player_uuid", playerUuid)
+            nbt.putUuid("player_uuid", playerUuid!!)
+            nbt.putString("block", block!!.registryEntry.registryKey().value.toString())
+        }
     }
 }

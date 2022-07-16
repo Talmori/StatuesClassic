@@ -6,9 +6,8 @@ import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Identifier
 import talsumi.statuesclassic.content.blockentity.StatueBE
-import java.util.function.Function
 
-class StatueModel(val slim: Boolean, val username: String, layerFactory: Function<Identifier, RenderLayer>?) : Model(layerFactory) {
+class StatueModel(val slim: Boolean, val texture: Identifier) : Model(RenderLayer::getEntityTranslucent) {
 
     val head: ModelPart
     val hat: ModelPart
@@ -86,6 +85,11 @@ class StatueModel(val slim: Boolean, val username: String, layerFactory: Functio
                 ModelTransform.pivot(5.0f, 2.0f, 0.0f)
             )
             modelPartData.addChild(
+                "right_arm",
+                ModelPartBuilder.create().uv(40, 16).cuboid(-3.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f, dilation),
+                ModelTransform.pivot(-5.0f, 2.0f + pivotOffsetY, 0.0f)
+            )
+            modelPartData.addChild(
                 "left_sleeve",
                 ModelPartBuilder.create().uv(48, 48)
                     .cuboid(-1.0f, -2.0f, -2.0f, 4.0f, 12.0f, 4.0f, dilation.add(0.25f)),
@@ -102,6 +106,11 @@ class StatueModel(val slim: Boolean, val username: String, layerFactory: Functio
             "left_leg",
             ModelPartBuilder.create().uv(16, 48).cuboid(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f, dilation),
             ModelTransform.pivot(1.9f, 12.0f, 0.0f)
+        )
+        modelPartData.addChild(
+            "right_leg",
+            ModelPartBuilder.create().uv(0, 16).cuboid(-2.0f, 0.0f, -2.0f, 4.0f, 12.0f, 4.0f, dilation),
+            ModelTransform.pivot(-1.9f, 12.0f + pivotOffsetY, 0.0f)
         )
         modelPartData.addChild(
             "left_pants",
@@ -138,7 +147,9 @@ class StatueModel(val slim: Boolean, val username: String, layerFactory: Functio
 
     fun setAngles(statue: StatueBE)
     {
+        val data = statue.data ?: return
 
+        //head.setAngles(data.headRaise, data.headRotate, 0f)
     }
 
     override fun render(matrices: MatrixStack, vertices: VertexConsumer, light: Int, overlay: Int, red: Float, green: Float, blue: Float, alpha: Float)

@@ -34,11 +34,13 @@ import net.minecraft.util.registry.Registry
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.content.blockentity.IUpdatableBlockEntity
 import talsumi.statuesclassic.core.StatueData
+import java.util.*
 
 object ClientPacketsOut {
 
     val request_block_entity_update = Identifier(StatuesClassic.MODID, "request_block_entity_update")
     val form_statue = Identifier(StatuesClassic.MODID, "form_statue")
+    val lookup_uuid = Identifier(StatuesClassic.MODID, "lookup_uuid")
 
     fun <T> sendRequestBlockEntityUpdate(be: T) where T: IUpdatableBlockEntity, T: BlockEntity
     {
@@ -48,10 +50,18 @@ object ClientPacketsOut {
         ClientPlayNetworking.send(request_block_entity_update, buf)
     }
 
-    fun sendFormStatuePacket(data: StatueData)
+    fun sendFormStatuePacket(uuid: UUID, data: StatueData)
     {
         val buf = PacketByteBufs.create()
+        buf.writeUuid(uuid)
         data.writePacket(buf)
         ClientPlayNetworking.send(form_statue, buf)
+    }
+
+    fun sendLookupUuidPacket(username: String)
+    {
+        val buf = PacketByteBufs.create()
+        buf.writeString(username)
+        ClientPlayNetworking.send(lookup_uuid, buf)
     }
 }

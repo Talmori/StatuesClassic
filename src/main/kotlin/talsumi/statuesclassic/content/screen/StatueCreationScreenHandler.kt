@@ -37,6 +37,7 @@ import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import talsumi.statues.networking.ClientPacketsOut
 import talsumi.statuesclassic.content.ModScreenHandlers
@@ -45,28 +46,36 @@ import talsumi.statuesclassic.core.StatueCreation
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.marderlib.screenhandler.EnhancedScreenHandler
 import talsumi.statuesclassic.mixininterfaces.StatuesClassicPlayerListenerGrabber
+import java.util.*
 
 
-class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val parentPos: BlockPos?, val world: World?) : EnhancedScreenHandler(type, syncId) {
+class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val hitFace: Direction?, val playerFacing: Direction?, val parentPos: BlockPos?, val world: World?) : EnhancedScreenHandler(type, syncId) {
 
     //Client Constructor
-    constructor(syncId: Int, inv: PlayerInventory) : this(syncId, null, null)
+    constructor(syncId: Int, inv: PlayerInventory) : this(syncId, null, null, null, null)
 
     //Common Constructor
-    constructor(syncId: Int, parentPos: BlockPos?, world: World?) : this(ModScreenHandlers.statue_creation_screen, syncId, parentPos, world)
-    {
+    constructor(syncId: Int, hitFace: Direction?, playerFacing: Direction?, parentPos: BlockPos?, world: World?) : this(
+        ModScreenHandlers.statue_creation_screen,
+        syncId,
+        hitFace,
+        playerFacing,
+        parentPos,
+        world
+    ) {
         setup()
     }
 
-    fun setup()
-    {
+    fun setup() {
 
     }
 
-    fun form(data: StatueData)
+    fun form(uuid: UUID, data: StatueData)
     {
-        if (parentPos != null && world != null)
-            StatueCreation.tryCreateStatue(parentPos!!, world!!, data)
+        if (parentPos != null && world != null) {
+            val direction = if (hitFace == Direction.NORTH || hitFace == Direction.SOUTH) playerFacing!! else hitFace!!
+            StatueCreation.tryCreateStatue(parentPos!!, world!!, uuid, data, direction)
+        }
         for (listener in getListeners())
             listener.statuesclassic_getOwningPlayer().closeHandledScreen()
     }
@@ -77,12 +86,12 @@ class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val 
     }
 
     companion object {
-        fun makeFactory(pos: BlockPos, world: World): NamedScreenHandlerFactory
+        fun makeFactory(player: PlayerEntity, hitFace: Direction, pos: BlockPos, world: World): NamedScreenHandlerFactory
         {
             return object: NamedScreenHandlerFactory {
                 override fun createMenu(syncId: Int, inv: PlayerInventory, player: PlayerEntity): ScreenHandler?
                 {
-                    return StatueCreationScreenHandler(syncId, pos, world)
+                    return StatueCreationScreenHandler(syncId, player.horizontalFacing, hitFace, pos, world)
                 }
                 override fun getDisplayName(): Text {
                     return TranslatableText("")

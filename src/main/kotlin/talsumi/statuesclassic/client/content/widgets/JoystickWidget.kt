@@ -8,6 +8,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.math.Vec2f
 import talsumi.statuesclassic.marderlib.screen.EnhancedScreen
 import talsumi.statuesclassic.marderlib.screen.widget.BaseWidget
+import talsumi.statuesclassic.marderlib.util.RenderUtil
 import java.awt.geom.Arc2D
 
 class JoystickWidget(x: Int, y: Int, width: Int, height: Int, val stickSize: Int, val u: Int, val v: Int, val screen: EnhancedScreen<*>, val tooltip: Text? = null, val callback: (() -> Unit)? = null) : BaseWidget(x, y, width, height) {
@@ -24,6 +25,9 @@ class JoystickWidget(x: Int, y: Int, width: Int, height: Int, val stickSize: Int
     {
         val x = this.x + x + stickX - halfStickSize
         val y = this.y + y + stickY - halfStickSize
+
+        val snap = RenderUtil.getSnapshot()
+        matrices.push()
 
         //Render the joystick ourselves, vanilla's drawTexture rounds to integers.
         RenderSystem.setShader { GameRenderer.getPositionTexShader() }
@@ -48,6 +52,9 @@ class JoystickWidget(x: Int, y: Int, width: Int, height: Int, val stickSize: Int
         bufferBuilder.vertex(matrix, xMin, yMin, zOffset.toFloat()).texture(uMin, vMin).next()
         bufferBuilder.end()
         BufferRenderer.draw(bufferBuilder)
+
+        matrices.pop()
+        snap.restore()
     }
 
     fun getPosition(): Pair<Float, Float>

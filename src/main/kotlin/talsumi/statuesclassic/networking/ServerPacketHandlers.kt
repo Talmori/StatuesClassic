@@ -36,6 +36,7 @@ import net.minecraft.util.registry.Registry
 import talsumi.statuesclassic.content.blockentity.IUpdatableBlockEntity
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.core.StatueData
+import talsumi.statuesclassic.core.UUIDLookups
 import talsumi.statuesclassic.marderlib.screenhandler.EnhancedScreenHandler
 
 object ServerPacketHandlers {
@@ -44,15 +45,17 @@ object ServerPacketHandlers {
     {
         ServerPlayNetworking.registerGlobalReceiver(ClientPacketsOut.request_block_entity_update, ::receiveRequestBlockEntityUpdatePacket)
         ServerPlayNetworking.registerGlobalReceiver(ClientPacketsOut.form_statue, ::receiveFormStatuePacket)
+        ServerPlayNetworking.registerGlobalReceiver(ClientPacketsOut.lookup_uuid, ::receiveLookupUuidPacket)
     }
 
     private fun receiveRequestBlockEntityUpdatePacket(server: MinecraftServer, player: ServerPlayerEntity, handler: ServerPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
     {
         val pos = buf.readBlockPos()
         val type = Registry.BLOCK_ENTITY_TYPE.get(buf.readIdentifier())
-        val be = player.world.getBlockEntity(pos, type).orElse(null) ?: return
 
         server.execute {
+            val be = player.world.getBlockEntity(pos, type).orElse(null) ?: return@execute
+
             if (be is IUpdatableBlockEntity)
                 ServerPacketsOut.sendUpdateBlockEntityPacket(be, player)
         }
@@ -60,11 +63,25 @@ object ServerPacketHandlers {
 
     private fun receiveFormStatuePacket(server: MinecraftServer, player: ServerPlayerEntity, handler: ServerPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
     {
+        val uuid = buf.readUuid()
         val data = StatueData.fromPacket(buf)
 
         server.execute {
             if (player.currentScreenHandler is StatueCreationScreenHandler)
-                (player.currentScreenHandler as StatueCreationScreenHandler).form(data)
+                (player.currentScreenHandler as StatueCreationScreenHandler).form(uuid, data)
+        }
+    }
+
+    private fun receiveLookupUuidPacket(server: MinecraftServer, player: ServerPlayerEntity, handler: ServerPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
+    {
+        val username = buf.readString()
+
+        server.execute {
+            if (player.currentScreenHandler is StatueCreationScreenHandler) {
+                UUIDLookups.lookupUuidFromClient(player, server, username, whenFound = {
+                    ServerPacketsOut.sendStatueUuidPacket(username, it, player)
+                })
+            }
         }
     }
 }
