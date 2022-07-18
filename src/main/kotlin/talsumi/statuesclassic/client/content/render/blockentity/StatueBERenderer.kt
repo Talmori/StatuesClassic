@@ -27,13 +27,13 @@
 package talsumi.statuesclassic.client.content.render.blockentity
 
 import com.mojang.authlib.GameProfile
-import com.mojang.authlib.minecraft.MinecraftProfileTexture
+import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.render.RenderLayer
+import net.minecraft.client.render.Shader
+import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.render.VertexConsumerProvider
 import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.texture.PlayerSkinProvider
-import net.minecraft.client.util.DefaultSkinHelper
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
@@ -41,26 +41,74 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3f
 import talsumi.statuesclassic.client.content.model.StatueModel
 import talsumi.statuesclassic.content.blockentity.StatueBE
+import talsumi.statuesclassic.core.StatueData
+import talsumi.statuesclassic.marderlib.util.RenderUtil
+import java.awt.Color
 import java.util.*
 import kotlin.collections.HashMap
 
 class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
 
-    private val cache = HashMap<UUID, CacheModel>()
+    companion object {
+        private val cache = HashMap<UUID, CacheData>()
 
-    private fun getOrCreateCachedModel(uuid: UUID): CacheModel
-    {
-        return cache[uuid] ?: run {
-            val model = CacheModel(false, false, null)
-            cache[uuid] = model
-            dummy()
-            model
+        private fun getOrCreateCachedModel(uuid: UUID): CacheData
+        {
+            return cache[uuid] ?: run {
+                val model = CacheData(false, false, false, null)
+                cache[uuid] = model
+                model
+            }
+        }
+
+        private fun setupCachedData(cache: CacheData, slim: Boolean, texture: Identifier)
+        {
+            cache.slim = slim
+            cache.texture = texture
+            cache.setup = true
+            cache.pending = false
+        }
+
+        /**
+         * Returns the skin data for [uuid], whenever it is ready.
+         * Calling will download data, when it is available this method will return it. Before it is available it will return null.
+         */
+        fun getCachedData(uuid: UUID): CacheData?
+        {
+            val cache = getOrCreateCachedModel(uuid)
+            if (!cache.setup) {
+                if (!cache.pending) {
+                    SkinCache.getSkin(uuid!!, whenReady = { texture, slim -> setupCachedData(cache, slim, texture) })
+                    cache.pending = true
+                }
+
+                return null
+            }
+            else
+                return cache
         }
     }
 
-    fun dummy()
+    private val model = StatueModel(false)
+    private val slimModel = StatueModel(true)
+
+    //TODO: Shader for colourizing statues by base block
+    fun render(data: StatueData, uuid: UUID, slim: Boolean, texture: Identifier, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int, overrideVC: VertexConsumer? = null)
     {
-        println("Created model!")
+        matrices.push()
+        val snapshot = RenderUtil.getSnapshot()
+
+        val color = Color.MAGENTA
+        val model = if (slim) slimModel else model
+        val vertex = overrideVC ?: vertexProvider.getBuffer(RenderLayer.getEntityTranslucent(texture))
+
+        matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(180f))
+
+        model.setAngles(data)
+        model.render(matrices, vertex, light, overlay, 1f, 1f, 1f, 1f)
+
+        snapshot.restore()
+        matrices.pop()
     }
 
     override fun render(statue: StatueBE, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
@@ -68,7 +116,8 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         if (!statue.hasBeenSetup)
             return
 
-        val cache = getOrCreateCachedModel(statue.playerUuid!!)
+        val cache = getCachedData(statue.playerUuid!!)
+        /*val cache = getOrCreateCachedModel(statue.playerUuid!!)
 
         if (!cache.setup) {
             //TODO: Slim skins
@@ -78,33 +127,19 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
                 cache.pending = true
             }
         }
-        else {
+        else {*/
+        if (cache != null) {
             matrices.push()
-            val model = cache.model!!
-            val vertex = vertexProvider.getBuffer(RenderLayer.getEntityTranslucent(model.texture))
-
             matrices.translate(0.5, 1.5, 0.5)
             val facing = statue.cachedState.get(Properties.HORIZONTAL_FACING)
             matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(facing.asRotation()))
-            if (facing == Direction.EAST || facing == Direction.WEST)
-                matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180f))
-
-            matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(180f))
-
-            model.setAngles(statue)
-            model.render(matrices, vertex, light, overlay, 1f, 1f, 1f, 1f)
-
+            render(statue.data!!, statue.playerUuid!!, cache.slim, cache.texture!!, tickDelta, matrices, vertexProvider, light, overlay)
             matrices.pop()
         }
+        //}
     }
 
-    fun setup(cache: CacheModel, statue: StatueBE, uuid: UUID, slim: Boolean, texture: Identifier)
-    {
-        cache.model = StatueModel(slim, texture)
-        cache.setup = true
-    }
-
-    class CacheModel(var setup: Boolean, var pending: Boolean, var model: StatueModel?)
+    class CacheData(var setup: Boolean, var pending: Boolean, var slim: Boolean, var texture: Identifier?)
 }
 
 object SkinCache {

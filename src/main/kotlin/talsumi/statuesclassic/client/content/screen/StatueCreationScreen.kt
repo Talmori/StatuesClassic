@@ -26,26 +26,29 @@
 
 package talsumi.statuesclassic.client.content.screen
 
-import ca.weblite.objc.Client
-import com.mojang.authlib.Agent
-import com.mojang.authlib.GameProfile
-import com.mojang.authlib.ProfileLookupCallback
 import com.mojang.authlib.minecraft.MinecraftProfileTexture
+import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.widget.TextFieldWidget
+import net.minecraft.client.render.*
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.MathHelper
+import org.lwjgl.opengl.GL11
 import talsumi.statues.networking.ClientPacketsOut
 import talsumi.statuesclassic.StatuesClassic
+import talsumi.statuesclassic.client.content.render.blockentity.StatueBERenderer
 import talsumi.statuesclassic.client.content.widgets.ButtonWidget
 import talsumi.statuesclassic.client.content.widgets.JoystickWidget
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
+import talsumi.statuesclassic.core.StatueCreation
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.marderlib.screen.EnhancedScreen
+import talsumi.statuesclassic.marderlib.util.RenderUtil
 import java.util.*
 
 class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: PlayerInventory?, title: Text?) :
@@ -61,10 +64,14 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     private var lastName: String = ""
     private var uuid: UUID? = null
     private var lookupDelay = 0
-    //TODO: This
     private var data = StatueData(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
     private var skin: Identifier? = null
 
+    private val renderer = StatueBERenderer()
+
+    private val fullbright = 0xF000F0
+
+    //TODO: Swap joystick sides
     init
     {
         backgroundWidth = 198
@@ -101,38 +108,25 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
     private fun joystickChange()
     {
-        data.leftArmRaise = joystick1.getYPosition()
-        data.leftArmRotate = joystick1.getXPosition()
-        data.rightArmRaise = joystick2.getYPosition()
-        data.rightArmRotate = joystick2.getXPosition()
-        data.leftLegRaise = joystick3.getYPosition()
-        data.leftLegRotate = joystick3.getXPosition()
-        data.rightLegRaise = joystick4.getYPosition()
-        data.rightLegRotate = joystick4.getXPosition()
-        data.headRaise = joystick5.getYPosition()
-        data.headRotate = joystick5.getXPosition()
-        data.masterRaise = joystick6.getYPosition()
-        data.masterRotate = joystick6.getXPosition()
+        StatueCreation.applyJoystickAnglesToStatueData(data,
+            joystick1.getYPosition(),
+            joystick1.getXPosition(),
+            joystick2.getYPosition(),
+            joystick2.getXPosition(),
+            joystick3.getYPosition(),
+            joystick3.getXPosition(),
+            joystick4.getYPosition(),
+            joystick4.getXPosition(),
+            joystick5.getYPosition(),
+            joystick5.getXPosition(),
+            joystick6.getYPosition(),
+            joystick6.getXPosition())
     }
 
     fun form()
     {
         if (uuid == null)
             return
-
-        val data = StatueData(
-        180f * joystick1.getYPosition(),
-            180f * joystick1.getXPosition(),
-            180f * joystick2.getYPosition(),
-            180f * joystick2.getXPosition(),
-            180f * joystick3.getYPosition(),
-            180f * joystick3.getXPosition(),
-            180f * joystick4.getYPosition(),
-            180f * joystick4.getXPosition(),
-            180f * joystick5.getYPosition(),
-            180f * joystick5.getXPosition(),
-            180f * joystick6.getYPosition(),
-            180f * joystick6.getXPosition())
 
         ClientPacketsOut.sendFormStatuePacket(uuid!!, data)
     }
@@ -167,6 +161,47 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
         nameField.render(matrices, mouseX, mouseY, delta)
     }
 
+    override fun drawBackground(matrices: MatrixStack, delta: Float, mouseX: Int, mouseY: Int)
+    {
+        //super.drawBackground(matrices, delta, mouseX, mouseY)
+        drawModel(matrices, mouseX, mouseY, delta)
+    }
+
+    private fun drawModel(matrices: MatrixStack, mouseX: Int, mouseY: Int, delta: Float)
+    {
+        if (uuid != null) {
+            val skinData = StatueBERenderer.getCachedData(uuid!!) ?: return
+            val dispatcher = MinecraftClient.getInstance().entityRenderDispatcher
+
+            val vertexConsumerProvider = MinecraftClient.getInstance().bufferBuilders.entityVertexConsumers
+
+            matrices.push()
+            val snapshot = RenderUtil.getSnapshot()
+            val ourMatrix = MatrixStack()
+            ourMatrix.translate(0.0, 0.0, -1.0)
+            renderer.render(data, uuid!!, skinData.slim, skinData.texture!!, delta, ourMatrix, vertexConsumerProvider, fullbright, OverlayTexture.DEFAULT_UV)
+            //vertexConsumerProvider.draw()
+
+            snapshot.restore()
+            matrices.pop()
+            /*
+            val viewStack = RenderSystem.getModelViewStack()
+            viewStack.push()
+            viewStack.translate(0.0, 0.0, 1050.0)
+            viewStack.scale(1.0f, 1.0f, -1.0f)
+            RenderSystem.applyModelViewMatrix()
+
+            viewStack.pop()
+             */
+            /*val ourMatrix = MatrixStack()
+            val bufferBuilder = Tessellator.getInstance().buffer
+
+            bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL)
+            renderer.render(data, uuid!!, skinData.slim, skinData.texture!!, delta, ourMatrix, vertexConsumerProvider, fullbright, OverlayTexture.DEFAULT_UV, bufferBuilder)
+            bufferBuilder.end()
+            BufferRenderer.draw(bufferBuilder)*/
+        }
+    }
 
     private fun skinAvailable(type: MinecraftProfileTexture.Type, id: Identifier, texture: MinecraftProfileTexture)
     {

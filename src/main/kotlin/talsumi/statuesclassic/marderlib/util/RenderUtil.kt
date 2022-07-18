@@ -33,7 +33,10 @@ object RenderUtil {
 
     fun getSnapshot(): Snapshot
     {
-        return Snapshot(RenderSystem.getShaderTexture(0), RenderSystem.getShaderColor().copyOf(), RenderSystem.getShader())
+        return Snapshot(
+            RenderSystem.getShaderTexture(0),
+            RenderSystem.getShaderColor().copyOf(),
+            RenderSystem.getShader())
     }
 
     class Snapshot(val tex: Int, val colour: FloatArray, val shader: Shader?) {
