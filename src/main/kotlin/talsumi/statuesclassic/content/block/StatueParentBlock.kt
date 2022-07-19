@@ -11,7 +11,10 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import talsumi.statuesclassic.content.ModBlockEntities
 import talsumi.statuesclassic.content.blockentity.StatueBE
+import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
+import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
 
 class StatueParentBlock(settings: Settings) : AbstractStatueBlock(settings), BlockEntityProvider {
 
@@ -29,7 +32,14 @@ class StatueParentBlock(settings: Settings) : AbstractStatueBlock(settings), Blo
 
     override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hand: Hand, hit: BlockHitResult): ActionResult
     {
-        return super.onUse(state, world, pos, player, hand, hit)
+        val be = world.getBlockEntity(pos) ?: return ActionResult.FAIL
+
+        if (world.isClient) return ActionResult.SUCCESS
+
+        if (be is StatueBE)
+            player.openHandledScreen(StatueEquipmentScreenHandler.makeFactory(be))
+
+        return ActionResult.SUCCESS
     }
 
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean)

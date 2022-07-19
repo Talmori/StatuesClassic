@@ -16,6 +16,10 @@ object StatueCreation {
     {
         if (StatuePlacement.canCreateStatueHere(world, bottomPos)) {
             val block = world.getBlockState(bottomPos).block
+
+            //Sanity check for facing
+            if (facing == Direction.UP || facing == Direction.DOWN) return
+
             world.setBlockState(bottomPos, ModBlocks.statue_parent.defaultState.with(Properties.HORIZONTAL_FACING, facing))
             world.setBlockState(bottomPos.up(), ModBlocks.statue_child.defaultState)
             val be = world.getBlockEntity(bottomPos)

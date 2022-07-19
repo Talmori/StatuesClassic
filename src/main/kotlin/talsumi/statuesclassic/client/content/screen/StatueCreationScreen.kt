@@ -30,15 +30,14 @@ import com.mojang.authlib.minecraft.MinecraftProfileTexture
 import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.widget.TextFieldWidget
-import net.minecraft.client.render.*
+import net.minecraft.client.render.DiffuseLighting
+import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Identifier
-import net.minecraft.util.math.MathHelper
-import org.lwjgl.opengl.GL11
 import talsumi.statues.networking.ClientPacketsOut
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.client.content.render.blockentity.StatueBERenderer
@@ -52,8 +51,9 @@ import talsumi.statuesclassic.marderlib.util.RenderUtil
 import java.util.*
 
 class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: PlayerInventory?, title: Text?) :
-    EnhancedScreen<StatueCreationScreenHandler>(handler, inventory, title, Identifier(StatuesClassic.MODID, "textures/gui/statue_creation.png")) {
+    EnhancedScreen<StatueCreationScreenHandler>(handler, inventory, title, Identifier(StatuesClassic.MODID, "textures/gui/statue_creation_overlay.png")) {
 
+    private val underlayTexture = Identifier(StatuesClassic.MODID, "textures/gui/statue_creation_underlay.png")
     private val joystick1: JoystickWidget
     private val joystick2: JoystickWidget
     private val joystick3: JoystickWidget
@@ -76,14 +76,19 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     {
         backgroundWidth = 198
         backgroundHeight = 208
-        joystick1 = JoystickWidget(5, 7, 48, 48, 14, 198, 0, this, LiteralText("LeftArm"), ::joystickChange)
-        joystick2 = JoystickWidget(145, 7, 48, 48, 14, 198, 0, this, LiteralText("RightArm"), ::joystickChange)
-        joystick3 = JoystickWidget(5, 59, 48, 48, 14, 198, 0, this, LiteralText("LeftLeg"), ::joystickChange)
-        joystick4 = JoystickWidget(145, 59, 48, 48, 14, 198, 0, this, LiteralText("RightLeg"), ::joystickChange)
+        joystick1 = JoystickWidget(145, 7, 48, 48, 14, 198, 0, this, LiteralText("LeftArm"), ::joystickChange)
+        joystick2 = JoystickWidget(5, 7, 48, 48, 14, 198, 0, this, LiteralText("RightArm"), ::joystickChange)
+        joystick3 = JoystickWidget(145, 59, 48, 48, 14, 198, 0, this, LiteralText("LeftLeg"), ::joystickChange)
+        joystick4 = JoystickWidget(5, 59, 48, 48, 14, 198, 0, this, LiteralText("RightLeg"), ::joystickChange)
         joystick5 = JoystickWidget(5, 111, 48, 48, 14, 198, 0, this, LiteralText("Head"), ::joystickChange)
         joystick6 = JoystickWidget(145, 111, 48, 48, 14, 198, 0, this, LiteralText("Master"), ::joystickChange)
-        val randomizeButton = ButtonWidget(4, 162, 190, 20, 0, 208, ::randomize, TranslatableText("gui.statuesclassic.randomize"))
-        val formButton = ButtonWidget(4, 184, 190, 20, 0, 208, ::form, TranslatableText("gui.statuesclassic.sculpt"))
+        val randomizeButton = ButtonWidget(4, 162, 190, 20, 0, 208, ::randomize, {TranslatableText("gui.statuesclassic.randomize")})
+        val formButton = object: ButtonWidget(4, 184, 190, 20, 0, 208, ::form, {TranslatableText("gui.statuesclassic.sculpt")}, { uuid != null }) {
+            override fun getTooltip(): List<Text>?
+            {
+                return if (uuid == null) listOf(TranslatableText("gui.statuesclassic.sculpt_invalid")) else null
+            }
+        }
 
         addWidgets(joystick1, joystick2, joystick3, joystick4, joystick5, joystick6, randomizeButton, formButton)
     }
@@ -143,15 +148,24 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
         if ((nameField.text.isNotEmpty() && nameField.text != lastName) || lookupDelay > 0) {
             lookupDelay++
 
+            //Make sure not to spam lookup requests.
             if (lookupDelay >= 40) {
                 lookupDelay = 0
                 //This will eventually update the uuid in this screen.
                 ClientPacketsOut.sendLookupUuidPacket(lastName)
             }
 
-            lastName = nameField.text
-            if (lastName.isEmpty())
+            //Invalidate uuid and skin when input changes
+            if (lastName != nameField.text) {
+                uuid = null
                 skin = null
+            }
+
+            lastName = nameField.text
+            if (lastName.isEmpty()) {
+                uuid = null
+                skin = null
+            }
         }
     }
 
@@ -163,43 +177,54 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
     override fun drawBackground(matrices: MatrixStack, delta: Float, mouseX: Int, mouseY: Int)
     {
-        //super.drawBackground(matrices, delta, mouseX, mouseY)
-        drawModel(matrices, mouseX, mouseY, delta)
+        //Render underlay
+        RenderSystem.setShaderTexture(0, underlayTexture)
+        val x = (width - backgroundWidth) / 2
+        val y = (height - backgroundHeight) / 2
+        drawTexture(matrices, x, y, 0, 0, backgroundWidth, backgroundHeight)
+
+        //Render player model
+        val middleX = x+backgroundWidth/2.0
+        val middleY = y+backgroundHeight/2.0
+        drawModel(matrices, 45f, middleX, middleY-65f, mouseX, mouseY, delta)
+
+        //Render ui
+        super.drawBackground(matrices, delta, mouseX, mouseY)
     }
 
-    private fun drawModel(matrices: MatrixStack, mouseX: Int, mouseY: Int, delta: Float)
+    private fun drawModel(matrices: MatrixStack, size: Float, x: Double, y: Double, mouseX: Int, mouseY: Int, delta: Float)
     {
+        //I have no idea what some of this is, it's just copied from InventoryScreen#drawEntity
         if (uuid != null) {
             val skinData = StatueBERenderer.getCachedData(uuid!!) ?: return
-            val dispatcher = MinecraftClient.getInstance().entityRenderDispatcher
-
-            val vertexConsumerProvider = MinecraftClient.getInstance().bufferBuilders.entityVertexConsumers
 
             matrices.push()
             val snapshot = RenderUtil.getSnapshot()
-            val ourMatrix = MatrixStack()
-            ourMatrix.translate(0.0, 0.0, -1.0)
-            renderer.render(data, uuid!!, skinData.slim, skinData.texture!!, delta, ourMatrix, vertexConsumerProvider, fullbright, OverlayTexture.DEFAULT_UV)
-            //vertexConsumerProvider.draw()
 
-            snapshot.restore()
-            matrices.pop()
-            /*
             val viewStack = RenderSystem.getModelViewStack()
             viewStack.push()
-            viewStack.translate(0.0, 0.0, 1050.0)
+            viewStack.translate(x, y, 1050.0)
             viewStack.scale(1.0f, 1.0f, -1.0f)
             RenderSystem.applyModelViewMatrix()
 
-            viewStack.pop()
-             */
-            /*val ourMatrix = MatrixStack()
-            val bufferBuilder = Tessellator.getInstance().buffer
+            val ourMatrix = MatrixStack()
+            ourMatrix.translate(0.0, 0.0, 1000.0)
+            ourMatrix.scale(size, -size, -size)
 
-            bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL)
-            renderer.render(data, uuid!!, skinData.slim, skinData.texture!!, delta, ourMatrix, vertexConsumerProvider, fullbright, OverlayTexture.DEFAULT_UV, bufferBuilder)
-            bufferBuilder.end()
-            BufferRenderer.draw(bufferBuilder)*/
+            DiffuseLighting.method_34742()
+
+            val immediate = MinecraftClient.getInstance().bufferBuilders.entityVertexConsumers
+            RenderSystem.runAsFancy {
+                renderer.render(null, data, uuid!!, skinData.slim, skinData.texture!!, delta, ourMatrix, immediate, fullbright, OverlayTexture.DEFAULT_UV)
+            }
+            immediate.draw()
+
+            viewStack.pop()
+            RenderSystem.applyModelViewMatrix()
+            DiffuseLighting.enableGuiDepthLighting()
+
+            snapshot.restore()
+            matrices.pop()
         }
     }
 

@@ -73,7 +73,7 @@ class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val 
     fun form(uuid: UUID, data: StatueData)
     {
         if (parentPos != null && world != null) {
-            val direction = if (hitFace == Direction.NORTH || hitFace == Direction.SOUTH) playerFacing!! else hitFace!!
+            val direction = if (hitFace == Direction.UP || hitFace == Direction.DOWN) playerFacing!!.opposite else hitFace!!
             StatueCreation.tryCreateStatue(parentPos!!, world!!, uuid, data, direction)
         }
         for (listener in getListeners())

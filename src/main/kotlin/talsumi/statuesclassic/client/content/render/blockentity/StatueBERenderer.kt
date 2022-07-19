@@ -27,29 +27,37 @@
 package talsumi.statuesclassic.client.content.render.blockentity
 
 import com.mojang.authlib.GameProfile
-import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.Shader
-import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.render.VertexConsumerProvider
 import net.minecraft.client.render.block.entity.BlockEntityRenderer
+import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer
+import net.minecraft.client.render.entity.feature.FeatureRendererContext
+import net.minecraft.client.render.entity.model.BipedEntityModel
+import net.minecraft.client.util.DefaultSkinHelper
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.entity.EquipmentSlot
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.ArmorItem
+import net.minecraft.item.DyeableArmorItem
+import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
-import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3f
 import talsumi.statuesclassic.client.content.model.StatueModel
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.marderlib.util.RenderUtil
-import java.awt.Color
+import talsumi.statuesclassic.mixins.StatuesClassicArmorFeatureRendererInvoker
 import java.util.*
-import kotlin.collections.HashMap
 
 class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
 
     companion object {
+        internal val model = StatueModel(false)
+        internal val slimModel = StatueModel(true)
+
         private val cache = HashMap<UUID, CacheData>()
 
         private fun getOrCreateCachedModel(uuid: UUID): CacheData
@@ -89,23 +97,33 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         }
     }
 
-    private val model = StatueModel(false)
-    private val slimModel = StatueModel(true)
-
     //TODO: Shader for colourizing statues by base block
-    fun render(data: StatueData, uuid: UUID, slim: Boolean, texture: Identifier, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int, overrideVC: VertexConsumer? = null)
+    /**
+     * Renders a statue using [data] for rotations. [statue] may be null, in which case armour cannot be rendered
+     */
+    fun render(statue: StatueBE?, data: StatueData, uuid: UUID, slim: Boolean, texture: Identifier, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
     {
         matrices.push()
         val snapshot = RenderUtil.getSnapshot()
 
-        val color = Color.MAGENTA
         val model = if (slim) slimModel else model
-        val vertex = overrideVC ?: vertexProvider.getBuffer(RenderLayer.getEntityTranslucent(texture))
+        val vertex = vertexProvider.getBuffer(RenderLayer.getEntityTranslucent(texture))
 
+        //Flip so we aren't upside down
         matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(180f))
 
+        //Apply master rotation
+        matrices.translate(0.0, 1.0, 0.0)
+        matrices.multiply(Vec3f.POSITIVE_Y.getRadialQuaternion(data.masterRotate))
+        matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(data.masterRaise))
+        matrices.translate(0.0, -1.0, 0.0)
+
+        //Apply rotations from data and render
         model.setAngles(data)
         model.render(matrices, vertex, light, overlay, 1f, 1f, 1f, 1f)
+
+        if (statue != null)
+            StatueArmourFeatureRenderer.renderAllArmour(statue, tickDelta, matrices, vertexProvider, light, overlay)
 
         snapshot.restore()
         matrices.pop()
@@ -117,26 +135,15 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
             return
 
         val cache = getCachedData(statue.playerUuid!!)
-        /*val cache = getOrCreateCachedModel(statue.playerUuid!!)
 
-        if (!cache.setup) {
-            //TODO: Slim skins
-            if (!cache.pending) {
-                val uuid = statue.playerUuid
-                SkinCache.getSkin(uuid!!, whenReady = { texture, slim -> setup(cache, statue, uuid, slim, texture)})
-                cache.pending = true
-            }
-        }
-        else {*/
         if (cache != null) {
             matrices.push()
             matrices.translate(0.5, 1.5, 0.5)
             val facing = statue.cachedState.get(Properties.HORIZONTAL_FACING)
             matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(facing.asRotation()))
-            render(statue.data!!, statue.playerUuid!!, cache.slim, cache.texture!!, tickDelta, matrices, vertexProvider, light, overlay)
+            render(statue, statue.data!!, statue.playerUuid!!, cache.slim, cache.texture!!, tickDelta, matrices, vertexProvider, light, overlay)
             matrices.pop()
         }
-        //}
     }
 
     class CacheData(var setup: Boolean, var pending: Boolean, var slim: Boolean, var texture: Identifier?)
@@ -157,4 +164,48 @@ object SkinCache {
             )
         }
     }
+}
+
+object StatueArmourFeatureRenderer: ArmorFeatureRenderer<PlayerEntity, StatueModel, StatueModel>(Context, StatueModel(false), StatueModel(false)) {
+
+    object Context: FeatureRendererContext<PlayerEntity, StatueModel> {
+        private val ourModel = StatueModel(false)
+        override fun getModel(): StatueModel = ourModel
+        //In theory this is never used. Hopefully it works.
+        override fun getTexture(entity: PlayerEntity?): Identifier = DefaultSkinHelper.getTexture()
+    }
+
+    internal fun renderAllArmour(statue: StatueBE, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
+    {
+        renderSingleArmourPiece(statue.inventory.rawGet(0), EquipmentSlot.HEAD, matrices, vertexProvider, light, contextModel)
+        renderSingleArmourPiece(statue.inventory.rawGet(1), EquipmentSlot.CHEST, matrices, vertexProvider, light, contextModel)
+        renderSingleArmourPiece(statue.inventory.rawGet(2), EquipmentSlot.LEGS, matrices, vertexProvider, light, contextModel)
+        renderSingleArmourPiece(statue.inventory.rawGet(3), EquipmentSlot.FEET, matrices, vertexProvider, light, contextModel)
+    }
+
+    private fun renderSingleArmourPiece(item: ItemStack, slot: EquipmentSlot, matrices: MatrixStack, vertexConsumers: VertexConsumerProvider, light: Int, model: StatueModel)
+    {
+        this as StatuesClassicArmorFeatureRendererInvoker
+
+        if (item.item is ArmorItem) {
+            val armorItem = item.item as ArmorItem
+            if (armorItem.slotType == slot) {
+                (this.contextModel).setAttributes(model)
+                val bl = slot == EquipmentSlot.LEGS
+                val bl2 = item.hasGlint()
+                if (armorItem is DyeableArmorItem) {
+                    val i = armorItem.getColor(item)
+                    val f = (i shr 16 and 255).toFloat() / 255.0f
+                    val g = (i shr 8 and 255).toFloat() / 255.0f
+                    val h = (i and 255).toFloat() / 255.0f
+                    statuesclassic_invokeRenderArmorParts(matrices, vertexConsumers, light, armorItem, bl2, model, bl, f, g, h, null as String?)
+                    statuesclassic_invokeRenderArmorParts(matrices, vertexConsumers, light, armorItem, bl2, model, bl, 1.0f, 1.0f, 1.0f, "overlay")
+                } else {
+                    statuesclassic_invokeRenderArmorParts(matrices, vertexConsumers, light, armorItem, bl2, model, bl, 1.0f, 1.0f, 1.0f, null as String?)
+                }
+            }
+        }
+    }
+
+
 }

@@ -12,5 +12,6 @@
     "StatuesClassicServerPlayerEntityMixin"
   ],
   "client": [
+    "StatuesClassicArmorFeatureRendererInvoker"
   ]
 }

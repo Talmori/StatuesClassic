@@ -44,7 +44,7 @@ import talsumi.statuesclassic.marderlib.screenhandler.EnhancedScreenHandler
 class StatueEquipmentScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val inv: Inventory, val statue: StatueBE?) : EnhancedScreenHandler(type, syncId) {
 
     //Client Constructor
-    constructor(syncId: Int, inv: PlayerInventory) : this(syncId, inv, SimpleInventory(1), null)
+    constructor(syncId: Int, inv: PlayerInventory) : this(syncId, inv, SimpleInventory(6), null)
 
     //Common Constructor
     constructor(syncId: Int, pInv: PlayerInventory, inv: Inventory, statue: StatueBE?) : this(ModScreenHandlers.statue_equipment_screen, syncId, inv, statue)

@@ -43,6 +43,7 @@ import talsumi.statuesclassic.content.ModBlocks
 import talsumi.statuesclassic.content.ModItems
 import talsumi.statuesclassic.content.ModScreenHandlers
 
+//TODO: Click with glowstone to make statues illuminate, gunpowder to remove lighting, palette to colourize and paper to display nametag (Shouldn't be visible through walls)
 @Suppress("UNUSED")
 object StatuesClassic: ModInitializer {
 
