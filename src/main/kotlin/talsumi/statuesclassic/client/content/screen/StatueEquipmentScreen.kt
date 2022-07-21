@@ -27,12 +27,65 @@
 package talsumi.statuesclassic.client.content.screen
 
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
+import net.minecraft.text.TranslatableText
 import net.minecraft.util.Identifier
+import talsumi.statues.networking.ClientPacketsOut
 import talsumi.statuesclassic.StatuesClassic
+import talsumi.statuesclassic.client.content.widgets.ButtonWidget
+import talsumi.statuesclassic.client.content.widgets.JoystickWidget
 import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
+import talsumi.statuesclassic.core.StatueCreation
 import talsumi.statuesclassic.marderlib.screen.EnhancedScreen
 
+//TODO: Equipment screen with preview
 class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: PlayerInventory?, title: Text?) :
     EnhancedScreen<StatueEquipmentScreenHandler>(handler, inventory, title, Identifier(StatuesClassic.MODID, "textures/gui/statue_equipment.png")) {
+
+    val leftJoystick: JoystickWidget
+    val rightJoystick: JoystickWidget
+
+    init
+    {
+        leftJoystick = JoystickWidget(6, 35, 51, 14, 14, 176, 0, this, LiteralText("LeftHeld"), ::joystickChange)
+        rightJoystick = JoystickWidget(119, 35, 51, 14, 14, 176, 0, this, LiteralText("RightHeld"), ::joystickChange)
+
+        addWidgets(leftJoystick, rightJoystick)
+
+        leftJoystick.setPosition(StatueCreation.decodeHandRotation(screenHandler.statue?.leftHandRotate ?: 0f), 0f)
+        rightJoystick.setPosition(StatueCreation.decodeHandRotation(screenHandler.statue?.rightHandRotate ?: 0f), 0f)
+    }
+
+    private fun joystickChange()
+    {
+        ClientPacketsOut.sendUpdateStatueHandsPacket(
+            StatueCreation.encodeHandRotation(leftJoystick.getXPosition()),
+            StatueCreation.encodeHandRotation(rightJoystick.getXPosition()))
+    }
+
+    override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean
+    {
+        var dragged = false
+        for (widget in widgets) {
+            widget.onGeneralDragged(mouseX, mouseY, deltaX, deltaY)
+            if (button == 0)
+                widget.onLeftDragged(mouseX, mouseY, deltaX, deltaY)
+            else
+                widget.onRightDragged(mouseX, mouseY, deltaX, deltaY)
+
+            dragged = true
+        }
+        return if (dragged) true else return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
+    }
+
+    override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean
+    {
+        for (widget in widgets) {
+            if (widget is JoystickWidget)
+                widget.selected = false
+        }
+
+        return super.mouseReleased(mouseX, mouseY, button)
+    }
 }

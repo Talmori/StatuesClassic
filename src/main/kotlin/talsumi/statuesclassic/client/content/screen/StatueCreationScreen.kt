@@ -71,7 +71,6 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
     private val fullbright = 0xF000F0
 
-    //TODO: Swap joystick sides
     init
     {
         backgroundWidth = 198

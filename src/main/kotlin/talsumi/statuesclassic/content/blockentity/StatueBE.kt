@@ -25,6 +25,9 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
     var data: StatueData? = null
     var block: Block? = null
 
+    var leftHandRotate = 0f
+    var rightHandRotate = 0f
+
     var statueId = UUID.randomUUID()
 
     fun setup(block: Block, uuid: UUID, data: StatueData)
@@ -56,6 +59,8 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             buf.writeBoolean(data != null)
             data?.writePacket(buf)
             buf.writeString(block!!.registryEntry.registryKey().value.toString())
+            buf.writeFloat(leftHandRotate)
+            buf.writeFloat(rightHandRotate)
         }
     }
 
@@ -68,6 +73,8 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             if (buf.readBoolean())
                 data = StatueData.fromPacket(buf)
             block = Registry.BLOCK.get(Identifier(buf.readString()))
+            leftHandRotate = buf.readFloat()
+            rightHandRotate = buf.readFloat()
         }
     }
 
@@ -80,6 +87,8 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             data = StatueData.load(nbt.getCompound("statue_data"))
             playerUuid = nbt.getUuid("player_uuid")
             block = Registry.BLOCK.get(Identifier(nbt.getString("block")))
+            leftHandRotate = nbt.getFloat("left_hand_rotate")
+            rightHandRotate = nbt.getFloat("right_hand_rotate")
         }
     }
 
@@ -92,6 +101,8 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             nbt.put("statue_data", data!!.save())
             nbt.putUuid("player_uuid", playerUuid!!)
             nbt.putString("block", block!!.registryEntry.registryKey().value.toString())
+            nbt.putFloat("left_hand_rotate", leftHandRotate)
+            nbt.putFloat("right_hand_rotate", rightHandRotate)
         }
     }
 }

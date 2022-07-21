@@ -31,6 +31,17 @@ object StatueCreation {
         }
     }
 
+    fun updateStatueHands(pos: BlockPos, world: World, left: Float, right: Float)
+    {
+        val be = world.getBlockEntity(pos)
+
+        if (be is StatueBE) {
+            be.leftHandRotate = left;
+            be.rightHandRotate = right;
+            be.sendUpdatePacket()
+        }
+    }
+
     fun applyJoystickAnglesToStatueData(data: StatueData,
                                         joystick1Y: Float,
                                         joystick1X: Float,
@@ -58,4 +69,8 @@ object StatueCreation {
         data.masterRaise = joystick6Y
         data.masterRotate = joystick6X
     }
+
+    fun encodeHandRotation(joystick: Float): Float = joystick * MathHelper.RADIANS_PER_DEGREE
+
+    fun decodeHandRotation(rotation: Float): Float = rotation / MathHelper.RADIANS_PER_DEGREE
 }

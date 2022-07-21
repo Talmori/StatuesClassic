@@ -35,6 +35,7 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.registry.Registry
 import talsumi.statuesclassic.content.blockentity.IUpdatableBlockEntity
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
+import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.core.UUIDLookups
 import talsumi.statuesclassic.marderlib.screenhandler.EnhancedScreenHandler
@@ -45,6 +46,7 @@ object ServerPacketHandlers {
     {
         ServerPlayNetworking.registerGlobalReceiver(ClientPacketsOut.request_block_entity_update, ::receiveRequestBlockEntityUpdatePacket)
         ServerPlayNetworking.registerGlobalReceiver(ClientPacketsOut.form_statue, ::receiveFormStatuePacket)
+        ServerPlayNetworking.registerGlobalReceiver(ClientPacketsOut.update_statue_hands, ::receiveUpdateStatueHandsPacket)
         ServerPlayNetworking.registerGlobalReceiver(ClientPacketsOut.lookup_uuid, ::receiveLookupUuidPacket)
     }
 
@@ -69,6 +71,17 @@ object ServerPacketHandlers {
         server.execute {
             if (player.currentScreenHandler is StatueCreationScreenHandler)
                 (player.currentScreenHandler as StatueCreationScreenHandler).form(uuid, data)
+        }
+    }
+
+    private fun receiveUpdateStatueHandsPacket(server: MinecraftServer, player: ServerPlayerEntity, handler: ServerPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
+    {
+        val left = buf.readFloat()
+        val right = buf.readFloat()
+
+        server.execute {
+            if (player.currentScreenHandler is StatueEquipmentScreenHandler)
+                (player.currentScreenHandler as StatueEquipmentScreenHandler).updateHands(left, right)
         }
     }
 

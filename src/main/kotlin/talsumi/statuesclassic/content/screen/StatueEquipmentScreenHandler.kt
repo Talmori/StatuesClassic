@@ -38,6 +38,7 @@ import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import talsumi.statuesclassic.content.ModScreenHandlers
 import talsumi.statuesclassic.content.blockentity.StatueBE
+import talsumi.statuesclassic.core.StatueCreation
 import talsumi.statuesclassic.marderlib.screenhandler.EnhancedScreenHandler
 
 
@@ -58,6 +59,12 @@ class StatueEquipmentScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val
         addSlotBox(inv, 0, 80, 8, 1, 4, 18, 18)
         addSlot(inv, 4, 61, 34)
         addSlot(inv, 5, 99, 34)
+    }
+
+    fun updateHands(left: Float, right: Float)
+    {
+        if (statue != null)
+            StatueCreation.updateStatueHands(statue.pos, statue.world ?: return, left, right)
     }
 
     override fun canUse(player: PlayerEntity): Boolean

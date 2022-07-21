@@ -34,13 +34,14 @@ import net.minecraft.client.render.block.entity.BlockEntityRenderer
 import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer
 import net.minecraft.client.render.entity.feature.FeatureRendererContext
 import net.minecraft.client.render.entity.model.BipedEntityModel
+import net.minecraft.client.render.entity.model.EntityModelLayers
+import net.minecraft.client.render.model.json.ModelTransformation
 import net.minecraft.client.util.DefaultSkinHelper
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.DyeableArmorItem
-import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
@@ -122,8 +123,12 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         model.setAngles(data)
         model.render(matrices, vertex, light, overlay, 1f, 1f, 1f, 1f)
 
-        if (statue != null)
-            StatueArmourFeatureRenderer.renderAllArmour(statue, tickDelta, matrices, vertexProvider, light, overlay)
+        //TODO: Rendering for ArmorRenderers
+        //Render armour & held items
+        if (statue != null) {
+            model.getRenderer().renderAllArmour(statue, slim, tickDelta, matrices, vertexProvider, light, overlay, model)
+            renderHands(statue, tickDelta, matrices, vertexProvider, light, overlay)
+        }
 
         snapshot.restore()
         matrices.pop()
@@ -146,6 +151,18 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         }
     }
 
+    private fun renderHands(statue: StatueBE, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
+    {
+        renderItem(statue.inventory.rawGet(4), statue.leftHandRotate, tickDelta, matrices, vertexProvider, light, overlay)
+        renderItem(statue.inventory.rawGet(5), statue.rightHandRotate, tickDelta, matrices, vertexProvider, light, overlay)
+    }
+
+    private fun renderItem(item: ItemStack, rotation: Float, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
+    {
+        if (!item.isEmpty)
+            MinecraftClient.getInstance().itemRenderer.renderItem(item, ModelTransformation.Mode.FIXED, light, overlay, matrices, vertexProvider, 0)
+    }
+
     class CacheData(var setup: Boolean, var pending: Boolean, var slim: Boolean, var texture: Identifier?)
 }
 
@@ -166,42 +183,54 @@ object SkinCache {
     }
 }
 
-object StatueArmourFeatureRenderer: ArmorFeatureRenderer<PlayerEntity, StatueModel, StatueModel>(Context, StatueModel(false), StatueModel(false)) {
+class StatueArmourFeatureRenderer(private val leggings: BipedEntityModel<PlayerEntity>, val body: BipedEntityModel<PlayerEntity>): ArmorFeatureRenderer<PlayerEntity, BipedEntityModel<PlayerEntity>, BipedEntityModel<PlayerEntity>>(Context, leggings, body) {
 
-    object Context: FeatureRendererContext<PlayerEntity, StatueModel> {
+    object Context: FeatureRendererContext<PlayerEntity, BipedEntityModel<PlayerEntity>> {
         private val ourModel = StatueModel(false)
         override fun getModel(): StatueModel = ourModel
-        //In theory this is never used. Hopefully it works.
         override fun getTexture(entity: PlayerEntity?): Identifier = DefaultSkinHelper.getTexture()
     }
 
-    internal fun renderAllArmour(statue: StatueBE, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
-    {
-        renderSingleArmourPiece(statue.inventory.rawGet(0), EquipmentSlot.HEAD, matrices, vertexProvider, light, contextModel)
-        renderSingleArmourPiece(statue.inventory.rawGet(1), EquipmentSlot.CHEST, matrices, vertexProvider, light, contextModel)
-        renderSingleArmourPiece(statue.inventory.rawGet(2), EquipmentSlot.LEGS, matrices, vertexProvider, light, contextModel)
-        renderSingleArmourPiece(statue.inventory.rawGet(3), EquipmentSlot.FEET, matrices, vertexProvider, light, contextModel)
+    companion object {
+        fun make(slim: Boolean): StatueArmourFeatureRenderer
+        {
+            val modelLoader = MinecraftClient.getInstance().entityModelLoader
+            val armourInnerSlim = BipedEntityModel<PlayerEntity>(modelLoader.getModelPart(EntityModelLayers.PLAYER_SLIM_INNER_ARMOR))
+            val armourInnerStandard = BipedEntityModel<PlayerEntity>(modelLoader.getModelPart(EntityModelLayers.PLAYER_INNER_ARMOR))
+            val armourOuterSlim = BipedEntityModel<PlayerEntity>(modelLoader.getModelPart(EntityModelLayers.PLAYER_SLIM_OUTER_ARMOR))
+            val armourOuterStandard = BipedEntityModel<PlayerEntity>(modelLoader.getModelPart(EntityModelLayers.PLAYER_OUTER_ARMOR))
+            return if (slim) StatueArmourFeatureRenderer(armourInnerSlim, armourOuterSlim) else StatueArmourFeatureRenderer(armourInnerStandard, armourOuterStandard)
+        }
     }
 
-    private fun renderSingleArmourPiece(item: ItemStack, slot: EquipmentSlot, matrices: MatrixStack, vertexConsumers: VertexConsumerProvider, light: Int, model: StatueModel)
+    internal fun renderAllArmour(statue: StatueBE, slim: Boolean, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int, model: StatueModel)
+    {
+        renderSingleArmourPiece(statue.inventory.rawGet(0), EquipmentSlot.HEAD, matrices, vertexProvider, light, model, body)
+        renderSingleArmourPiece(statue.inventory.rawGet(1), EquipmentSlot.CHEST, matrices, vertexProvider, light, model, body)
+        renderSingleArmourPiece(statue.inventory.rawGet(2), EquipmentSlot.LEGS, matrices, vertexProvider, light, model, leggings)
+        renderSingleArmourPiece(statue.inventory.rawGet(3), EquipmentSlot.FEET, matrices, vertexProvider, light, model, body)
+    }
+
+    private fun renderSingleArmourPiece(stack: ItemStack, slot: EquipmentSlot, matrices: MatrixStack, vertexConsumers: VertexConsumerProvider, light: Int, model: StatueModel, renderModel: BipedEntityModel<PlayerEntity>)
     {
         this as StatuesClassicArmorFeatureRendererInvoker
+        val item = stack.item
 
-        if (item.item is ArmorItem) {
-            val armorItem = item.item as ArmorItem
-            if (armorItem.slotType == slot) {
-                (this.contextModel).setAttributes(model)
-                val bl = slot == EquipmentSlot.LEGS
-                val bl2 = item.hasGlint()
-                if (armorItem is DyeableArmorItem) {
-                    val i = armorItem.getColor(item)
+        if (item is ArmorItem) {
+            if (item.slotType == slot) {
+                model.setAttributes(renderModel)
+                val isLegs = slot == EquipmentSlot.LEGS
+                val hasEnchantmentGlint = item.hasGlint(stack)
+                statuesclassic_invokeSetVisible(renderModel, slot)
+                if (item is DyeableArmorItem) {
+                    val i = item.getColor(stack)
                     val f = (i shr 16 and 255).toFloat() / 255.0f
                     val g = (i shr 8 and 255).toFloat() / 255.0f
                     val h = (i and 255).toFloat() / 255.0f
-                    statuesclassic_invokeRenderArmorParts(matrices, vertexConsumers, light, armorItem, bl2, model, bl, f, g, h, null as String?)
-                    statuesclassic_invokeRenderArmorParts(matrices, vertexConsumers, light, armorItem, bl2, model, bl, 1.0f, 1.0f, 1.0f, "overlay")
+                    statuesclassic_invokeRenderArmorParts(matrices, vertexConsumers, light, item, hasEnchantmentGlint, renderModel, isLegs, f, g, h, null)
+                    statuesclassic_invokeRenderArmorParts(matrices, vertexConsumers, light, item, hasEnchantmentGlint, renderModel, isLegs, 1.0f, 1.0f, 1.0f, "overlay")
                 } else {
-                    statuesclassic_invokeRenderArmorParts(matrices, vertexConsumers, light, armorItem, bl2, model, bl, 1.0f, 1.0f, 1.0f, null as String?)
+                    statuesclassic_invokeRenderArmorParts(matrices, vertexConsumers, light, item, hasEnchantmentGlint, renderModel, isLegs, 1.0f, 1.0f, 1.0f, null)
                 }
             }
         }

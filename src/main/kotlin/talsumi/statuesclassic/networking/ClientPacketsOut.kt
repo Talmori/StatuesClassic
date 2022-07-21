@@ -40,6 +40,7 @@ object ClientPacketsOut {
 
     val request_block_entity_update = Identifier(StatuesClassic.MODID, "request_block_entity_update")
     val form_statue = Identifier(StatuesClassic.MODID, "form_statue")
+    val update_statue_hands = Identifier(StatuesClassic.MODID, "update_statue_hands")
     val lookup_uuid = Identifier(StatuesClassic.MODID, "lookup_uuid")
 
     fun <T> sendRequestBlockEntityUpdate(be: T) where T: IUpdatableBlockEntity, T: BlockEntity
@@ -56,6 +57,14 @@ object ClientPacketsOut {
         buf.writeUuid(uuid)
         data.writePacket(buf)
         ClientPlayNetworking.send(form_statue, buf)
+    }
+
+    fun sendUpdateStatueHandsPacket(left: Float, right: Float)
+    {
+        val buf = PacketByteBufs.create()
+        buf.writeFloat(left)
+        buf.writeFloat(right)
+        ClientPlayNetworking.send(update_statue_hands, buf)
     }
 
     fun sendLookupUuidPacket(username: String)
