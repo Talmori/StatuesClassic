@@ -36,11 +36,10 @@ import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
+import talsumi.marderlib.screenhandler.EnhancedScreenHandler
 import talsumi.statuesclassic.content.ModScreenHandlers
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueCreation
-import talsumi.statuesclassic.marderlib.screenhandler.EnhancedScreenHandler
-
 
 class StatueEquipmentScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val inv: Inventory, val statue: StatueBE?) : EnhancedScreenHandler(type, syncId) {
 

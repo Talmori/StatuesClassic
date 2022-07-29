@@ -26,9 +26,9 @@
 
 package talsumi.statuesclassic.datagen
 
+import talsumi.marderlib.pak.PAKGeneratorRegistry
+import talsumi.marderlib.util.FileUtil
 import talsumi.statuesclassic.StatuesClassic
-import talsumi.statuesclassic.marderlib.pak.PAKGeneratorRegistry
-import talsumi.statuesclassic.marderlib.util.FileUtil
 import java.io.File
 import java.nio.file.Paths
 

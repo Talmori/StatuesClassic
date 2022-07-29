@@ -30,11 +30,11 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import talsumi.marderlib.screen.EnhancedScreen
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.client.content.widgets.JoystickWidget
 import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
 import talsumi.statuesclassic.core.StatueCreation
-import talsumi.statuesclassic.marderlib.screen.EnhancedScreen
 import talsumi.statuesclassic.networking.ClientPacketsOut
 
 //TODO: Equipment screen with preview

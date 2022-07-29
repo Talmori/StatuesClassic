@@ -28,8 +28,8 @@ package talsumi.statuesclassic.content
 
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.minecraft.block.entity.BlockEntityType
+import talsumi.marderlib.registration.EasyRegisterableHolder
 import talsumi.statuesclassic.content.blockentity.StatueBE
-import talsumi.statuesclassic.marderlib.registration.EasyRegisterableHolder
 
 object ModBlockEntities: EasyRegisterableHolder<BlockEntityType<*>>() {
 

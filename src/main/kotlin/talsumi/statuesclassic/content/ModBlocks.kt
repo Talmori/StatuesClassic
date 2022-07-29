@@ -2,10 +2,10 @@ package talsumi.statuesclassic.content
 
 import net.minecraft.block.Block
 import net.minecraft.block.Material
+import talsumi.marderlib.registration.EasyRegisterableHolder
+import talsumi.marderlib.util.RegUtil
 import talsumi.statuesclassic.content.block.StatueChildBlock
 import talsumi.statuesclassic.content.block.StatueParentBlock
-import talsumi.statuesclassic.marderlib.registration.EasyRegisterableHolder
-import talsumi.statuesclassic.marderlib.util.RegUtil
 
 object ModBlocks: EasyRegisterableHolder<Block>() {
 

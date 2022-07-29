@@ -36,10 +36,10 @@ import net.minecraft.text.TranslatableText
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import talsumi.marderlib.screenhandler.EnhancedScreenHandler
 import talsumi.statuesclassic.content.ModScreenHandlers
 import talsumi.statuesclassic.core.StatueCreation
 import talsumi.statuesclassic.core.StatueData
-import talsumi.statuesclassic.marderlib.screenhandler.EnhancedScreenHandler
 import java.util.*
 
 
@@ -71,7 +71,7 @@ class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val 
             StatueCreation.tryCreateStatue(parentPos!!, world!!, uuid, data, direction)
         }
         for (listener in getListeners())
-            listener.statuesclassic_getOwningPlayer().closeHandledScreen()
+            listener.marderlib_getOwningPlayer().closeHandledScreen()
     }
 
     override fun canUse(player: PlayerEntity): Boolean

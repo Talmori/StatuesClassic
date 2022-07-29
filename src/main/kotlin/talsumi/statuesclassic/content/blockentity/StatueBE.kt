@@ -11,11 +11,11 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.registry.Registry
 import net.minecraft.world.World
+import talsumi.marderlib.storage.item.ItemStackHandler
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.content.ModBlockEntities
 import talsumi.statuesclassic.content.entity.DummyPlayerEntity
 import talsumi.statuesclassic.core.StatueData
-import talsumi.statuesclassic.marderlib.storage.item.ItemStackHandler
 import talsumi.statuesclassic.networking.ServerPacketsOut
 import java.util.*
 

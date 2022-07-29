@@ -9,9 +9,9 @@ import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
 import net.minecraft.util.math.Vec2f
-import talsumi.statuesclassic.marderlib.screen.EnhancedScreen
-import talsumi.statuesclassic.marderlib.screen.widget.BaseWidget
-import talsumi.statuesclassic.marderlib.util.RenderUtil
+import talsumi.marderlib.screen.EnhancedScreen
+import talsumi.marderlib.screen.widget.BaseWidget
+import talsumi.marderlib.util.RenderUtil
 
 class JoystickWidget(x: Int, y: Int, width: Int, height: Int, val stickSize: Int, val u: Int, val v: Int, val screen: EnhancedScreen<*>, val tooltip: Text? = null, val callback: (() -> Unit)? = null) : BaseWidget(x, y, width, height) {
 

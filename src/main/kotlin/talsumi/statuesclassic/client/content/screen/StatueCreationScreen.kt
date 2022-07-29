@@ -38,6 +38,8 @@ import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Identifier
+import talsumi.marderlib.screen.EnhancedScreen
+import talsumi.marderlib.util.RenderUtil
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.client.content.render.blockentity.StatueBERenderer
 import talsumi.statuesclassic.client.content.widgets.ButtonWidget
@@ -45,8 +47,6 @@ import talsumi.statuesclassic.client.content.widgets.JoystickWidget
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.core.StatueCreation
 import talsumi.statuesclassic.core.StatueData
-import talsumi.statuesclassic.marderlib.screen.EnhancedScreen
-import talsumi.statuesclassic.marderlib.util.RenderUtil
 import talsumi.statuesclassic.networking.ClientPacketsOut
 import java.util.*
 

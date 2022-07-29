@@ -46,10 +46,10 @@ import net.minecraft.item.ItemStack
 import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3f
+import talsumi.marderlib.util.RenderUtil
 import talsumi.statuesclassic.client.content.model.StatueModel
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueData
-import talsumi.statuesclassic.marderlib.util.RenderUtil
 import talsumi.statuesclassic.mixins.StatuesClassicArmorFeatureRendererInvoker
 import java.util.*
 

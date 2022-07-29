@@ -4,8 +4,8 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawableHelper
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
-import talsumi.statuesclassic.marderlib.screen.widget.BaseWidget
-import talsumi.statuesclassic.marderlib.util.RenderUtil
+import talsumi.marderlib.screen.widget.BaseWidget
+import talsumi.marderlib.util.RenderUtil
 
 open class ButtonWidget(x: Int, y: Int, width: Int, height: Int, val u: Int, val v: Int, val function: (() -> Unit)? = null, val text: (() -> Text)? = null, val isActive: (() -> Boolean)? = null) : BaseWidget(x, y, width, height) {
 
