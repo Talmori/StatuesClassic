@@ -24,12 +24,12 @@
  *
  */
 
-package talsumi.railexpansion.client.events
+package talsumi.statuesclassic.client.events
 
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.client.world.ClientWorld
-import talsumi.statues.networking.ClientPacketsOut
 import talsumi.statuesclassic.content.blockentity.IUpdatableBlockEntity
+import talsumi.statuesclassic.networking.ClientPacketsOut
 
 object ClientEventHandlers {
 

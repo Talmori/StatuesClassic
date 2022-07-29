@@ -30,13 +30,12 @@ import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientBlockEntityEvents
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry
 import net.minecraft.client.render.RenderLayer
-import net.minecraft.stat.Stat
-import talsumi.railexpansion.client.events.ClientEventHandlers
-import talsumi.statues.networking.ClientPacketHandlers
 import talsumi.statuesclassic.client.content.ModClientScreens
 import talsumi.statuesclassic.client.content.render.blockentity.StatueBERenderer
+import talsumi.statuesclassic.client.events.ClientEventHandlers
 import talsumi.statuesclassic.content.ModBlockEntities
 import talsumi.statuesclassic.content.ModBlocks
+import talsumi.statuesclassic.networking.ClientPacketHandlers
 
 @Suppress("UNUSED")
 object StatuesClassicClient: ClientModInitializer {

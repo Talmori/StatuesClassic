@@ -1,6 +1,8 @@
 package talsumi.statuesclassic.content.block
 
-import net.minecraft.block.*
+import net.minecraft.block.Block
+import net.minecraft.block.BlockEntityProvider
+import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.state.StateManager
@@ -11,9 +13,7 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-import talsumi.statuesclassic.content.ModBlockEntities
 import talsumi.statuesclassic.content.blockentity.StatueBE
-import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
 
 class StatueParentBlock(settings: Settings) : AbstractStatueBlock(settings), BlockEntityProvider {

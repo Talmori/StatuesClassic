@@ -24,7 +24,7 @@
  *
  */
 
-package talsumi.statues.networking
+package talsumi.statuesclassic.networking
 
 import net.fabricmc.fabric.api.networking.v1.PacketSender
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
@@ -38,7 +38,6 @@ import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.core.UUIDLookups
-import talsumi.statuesclassic.marderlib.screenhandler.EnhancedScreenHandler
 
 object ServerPacketHandlers {
 

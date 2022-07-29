@@ -5,7 +5,6 @@ import com.mojang.authlib.GameProfile
 import com.mojang.authlib.ProfileLookupCallback
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
-import java.lang.Exception
 import java.util.*
 import java.util.concurrent.Executors
 

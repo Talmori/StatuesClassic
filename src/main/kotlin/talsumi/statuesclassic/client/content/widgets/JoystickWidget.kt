@@ -1,15 +1,17 @@
 package talsumi.statuesclassic.client.content.widgets
 
 import com.mojang.blaze3d.systems.RenderSystem
-import net.minecraft.client.render.*
+import net.minecraft.client.render.BufferRenderer
+import net.minecraft.client.render.GameRenderer
+import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat.DrawMode
+import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
 import net.minecraft.util.math.Vec2f
 import talsumi.statuesclassic.marderlib.screen.EnhancedScreen
 import talsumi.statuesclassic.marderlib.screen.widget.BaseWidget
 import talsumi.statuesclassic.marderlib.util.RenderUtil
-import java.awt.geom.Arc2D
 
 class JoystickWidget(x: Int, y: Int, width: Int, height: Int, val stickSize: Int, val u: Int, val v: Int, val screen: EnhancedScreen<*>, val tooltip: Text? = null, val callback: (() -> Unit)? = null) : BaseWidget(x, y, width, height) {
 

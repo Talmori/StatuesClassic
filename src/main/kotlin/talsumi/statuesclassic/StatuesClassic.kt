@@ -37,11 +37,11 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.registry.Registry
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import talsumi.statues.networking.ServerPacketHandlers
 import talsumi.statuesclassic.content.ModBlockEntities
 import talsumi.statuesclassic.content.ModBlocks
 import talsumi.statuesclassic.content.ModItems
 import talsumi.statuesclassic.content.ModScreenHandlers
+import talsumi.statuesclassic.networking.ServerPacketHandlers
 
 //TODO: Click with glowstone to make statues illuminate, gunpowder to remove lighting, palette to colourize and paper to display nametag (Shouldn't be visible through walls)
 @Suppress("UNUSED")

@@ -1,5 +1,6 @@
 package talsumi.statuesclassic.content.blockentity
 
+import com.mojang.authlib.GameProfile
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -9,11 +10,13 @@ import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.registry.Registry
-import talsumi.statues.networking.ServerPacketsOut
+import net.minecraft.world.World
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.content.ModBlockEntities
+import talsumi.statuesclassic.content.entity.DummyPlayerEntity
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.marderlib.storage.item.ItemStackHandler
+import talsumi.statuesclassic.networking.ServerPacketsOut
 import java.util.*
 
 class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.statue, pos, state), IUpdatableBlockEntity {
@@ -30,6 +33,8 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
 
     var statueId = UUID.randomUUID()
 
+    var clientFakePlayer: DummyPlayerEntity? = null
+
     fun setup(block: Block, uuid: UUID, data: StatueData)
     {
         playerUuid = uuid
@@ -37,6 +42,14 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         this.block = block
         hasBeenSetup = true
         StatuesClassic.LOGGER.info("Created statue at $pos, for player $uuid, made of $block")
+    }
+
+    override fun setWorld(world: World)
+    {
+        super.setWorld(world)
+
+        if (world.isClient)
+            clientFakePlayer = DummyPlayerEntity(this, world, pos, 0f, GameProfile(null, "statuesclassic_fakeplayer"))
     }
 
     fun sendUpdatePacket()

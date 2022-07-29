@@ -28,24 +28,18 @@ package talsumi.statuesclassic.content.screen
 
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.NamedScreenHandlerFactory
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerType
-import net.minecraft.server.MinecraftServer
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
-import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-import talsumi.statues.networking.ClientPacketsOut
 import talsumi.statuesclassic.content.ModScreenHandlers
-import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueCreation
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.marderlib.screenhandler.EnhancedScreenHandler
-import talsumi.statuesclassic.mixininterfaces.StatuesClassicPlayerListenerGrabber
 import java.util.*
 
 

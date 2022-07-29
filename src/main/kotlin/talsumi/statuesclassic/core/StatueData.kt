@@ -2,7 +2,6 @@ package talsumi.statuesclassic.core
 
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
-import java.util.*
 
 class StatueData(var leftArmRaise: Float,
                  var leftArmRotate: Float,

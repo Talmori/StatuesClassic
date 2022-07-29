@@ -1,15 +1,9 @@
 package talsumi.statuesclassic.client.content.model
 
-import net.minecraft.client.model.*
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.VertexConsumer
+import net.minecraft.client.model.Dilation
 import net.minecraft.client.render.entity.model.PlayerEntityModel
-import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.Identifier
 import talsumi.statuesclassic.client.content.render.blockentity.StatueArmourFeatureRenderer
-import talsumi.statuesclassic.client.content.render.blockentity.StatueBERenderer
-import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueData
 
 val standardRenderer = StatueArmourFeatureRenderer.make(false)

@@ -29,15 +29,13 @@ package talsumi.statuesclassic.client.content.screen
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableText
 import net.minecraft.util.Identifier
-import talsumi.statues.networking.ClientPacketsOut
 import talsumi.statuesclassic.StatuesClassic
-import talsumi.statuesclassic.client.content.widgets.ButtonWidget
 import talsumi.statuesclassic.client.content.widgets.JoystickWidget
 import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
 import talsumi.statuesclassic.core.StatueCreation
 import talsumi.statuesclassic.marderlib.screen.EnhancedScreen
+import talsumi.statuesclassic.networking.ClientPacketsOut
 
 //TODO: Equipment screen with preview
 class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: PlayerInventory?, title: Text?) :
@@ -48,8 +46,9 @@ class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: Pl
 
     init
     {
-        leftJoystick = JoystickWidget(6, 35, 51, 14, 14, 176, 0, this, LiteralText("LeftHeld"), ::joystickChange)
-        rightJoystick = JoystickWidget(119, 35, 51, 14, 14, 176, 0, this, LiteralText("RightHeld"), ::joystickChange)
+        backgroundHeight = 179
+        leftJoystick = JoystickWidget(7, 67, 51, 14, 14, 176, 0, this, LiteralText("LeftHeld"), ::joystickChange)
+        rightJoystick = JoystickWidget(117, 67, 51, 14, 14, 176, 0, this, LiteralText("RightHeld"), ::joystickChange)
 
         addWidgets(leftJoystick, rightJoystick)
 

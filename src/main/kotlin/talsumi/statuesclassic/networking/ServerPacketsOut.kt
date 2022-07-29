@@ -24,7 +24,7 @@
  *
  */
 
-package talsumi.statues.networking
+package talsumi.statuesclassic.networking
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
