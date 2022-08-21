@@ -62,7 +62,6 @@ object StatuesClassic: ModInitializer {
 
         val eRegTime = System.currentTimeMillis()
 
-        println(talsumi.marderlib.MarderLib)
         ModScreenHandlers.wake()
         ServerPacketHandlers.register()
 
