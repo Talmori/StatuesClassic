@@ -26,31 +26,22 @@
 
 package talsumi.statuesclassic.client.content.render.blockentity
 
-import com.mojang.authlib.GameProfile
+import com.mojang.authlib.minecraft.MinecraftProfileTexture
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexConsumerProvider
 import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer
-import net.minecraft.client.render.entity.feature.FeatureRendererContext
-import net.minecraft.client.render.entity.model.BipedEntityModel
-import net.minecraft.client.render.entity.model.EntityModelLayers
-import net.minecraft.client.render.model.json.ModelTransformation
-import net.minecraft.client.util.DefaultSkinHelper
+import net.minecraft.client.render.entity.EntityRendererFactory
 import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ArmorItem
-import net.minecraft.item.DyeableArmorItem
-import net.minecraft.item.ItemStack
 import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3f
 import talsumi.marderlib.util.RenderUtil
 import talsumi.statuesclassic.client.content.model.StatueModel
+import talsumi.statuesclassic.client.content.render.entity.StatuePlayerRenderer
+import talsumi.statuesclassic.client.core.SkinHandler
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueData
-import talsumi.statuesclassic.mixins.StatuesClassicArmorFeatureRendererInvoker
 import java.util.*
 
 class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
@@ -58,8 +49,19 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
     companion object {
         internal val model = StatueModel(false)
         internal val slimModel = StatueModel(true)
+        internal val statueRenderer: StatuePlayerRenderer
+        internal val slimStatueRenderer: StatuePlayerRenderer
 
         private val cache = HashMap<UUID, CacheData>()
+
+        init
+        {
+            val mc = MinecraftClient.getInstance()
+            val ctx = EntityRendererFactory.Context(mc.entityRenderDispatcher, mc.itemRenderer, mc.resourceManager, mc.entityModelLoader, mc.textRenderer)
+            statueRenderer = StatuePlayerRenderer(model, ctx, false)
+            slimStatueRenderer = StatuePlayerRenderer(slimModel, ctx, true)
+        }
+
 
         private fun getOrCreateCachedModel(uuid: UUID): CacheData
         {
@@ -87,7 +89,7 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
             val cache = getOrCreateCachedModel(uuid)
             if (!cache.setup) {
                 if (!cache.pending) {
-                    SkinCache.getSkin(uuid!!, whenReady = { texture, slim -> setupCachedData(cache, slim, texture) })
+                    SkinHandler.getSkin(uuid!!, MinecraftProfileTexture.Type.SKIN, whenReady = { texture, slim -> setupCachedData(cache, slim, texture) })
                     cache.pending = true
                 }
 
@@ -108,6 +110,7 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         val snapshot = RenderUtil.getSnapshot()
 
         val model = if (slim) slimModel else model
+        val renderer = if (slim) slimStatueRenderer else statueRenderer
         val vertex = vertexProvider.getBuffer(RenderLayer.getEntityTranslucent(texture))
 
         //Flip so we aren't upside down
@@ -119,15 +122,16 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(data.masterRaise))
         matrices.translate(0.0, -1.0, 0.0)
 
-        //Apply rotations from data and render
+        //Apply rotations from data. This will carry through into a PlayerEntityRenderer render call
         model.setAngles(data)
-        model.render(matrices, vertex, light, overlay, 1f, 1f, 1f, 1f)
 
-        //TODO: Rendering for ArmorRenderers
-        //Render armour & held items
         if (statue != null) {
-            model.getRenderer().renderAllArmour(statue, slim, tickDelta, matrices, vertexProvider, light, overlay, model)
-            renderHands(statue, tickDelta, matrices, vertexProvider, light, overlay)
+            //If statue BlockEntity is present, render via a PlayerEntityRenderer. This allows armor, held items, etc.
+            renderer.render(statue, tickDelta, matrices, vertex, vertexProvider, light, overlay)
+        }
+        else {
+            //If BlockEntity isn't present, render directly from a model. Used for the statue creation GUI.
+            model.render(matrices, vertex, light, overlay, 1f, 1f, 1f, 1f)
         }
 
         snapshot.restore()
@@ -151,38 +155,47 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         }
     }
 
-    private fun renderHands(statue: StatueBE, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
-    {
-        renderItem(statue.inventory.rawGet(4), statue.leftHandRotate, tickDelta, matrices, vertexProvider, light, overlay)
-        renderItem(statue.inventory.rawGet(5), statue.rightHandRotate, tickDelta, matrices, vertexProvider, light, overlay)
-    }
-
-    private fun renderItem(item: ItemStack, rotation: Float, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
-    {
-        if (!item.isEmpty)
-            MinecraftClient.getInstance().itemRenderer.renderItem(item, ModelTransformation.Mode.FIXED, light, overlay, matrices, vertexProvider, 0)
-    }
-
     class CacheData(var setup: Boolean, var pending: Boolean, var slim: Boolean, var texture: Identifier?)
 }
 
+/*
 object SkinCache {
 
-    private val cache = HashMap<UUID, Pair<Identifier, Boolean>>()
+    private val skinCache = HashMap<UUID, Pair<Identifier, Boolean>>()
+    private val capeCache = HashMap<UUID, Pair<Identifier, Boolean>>()
+    private val elytraCache = HashMap<UUID, Pair<Identifier, Boolean>>()
 
-    fun getSkin(uuid: UUID, whenReady: (Identifier, Boolean) -> Unit)
+    private fun getCache(type: MinecraftProfileTexture.Type) = when (type) {
+        MinecraftProfileTexture.Type.SKIN -> skinCache
+        MinecraftProfileTexture.Type.CAPE -> capeCache
+        MinecraftProfileTexture.Type.ELYTRA -> elytraCache
+    }
+    fun getSkin(uuid: UUID, type: MinecraftProfileTexture.Type, whenReady: (Identifier, Boolean) -> Unit)
     {
+        val cache = getCache(type)
         if (cache.containsKey(uuid)) {
             whenReady.invoke(cache[uuid]!!.first, cache[uuid]!!.second)
         }
         else {
             MinecraftClient.getInstance().skinProvider.loadSkin(GameProfile(uuid, null),
-                { type, id, texture -> whenReady.invoke(id, false); cache[uuid] = Pair(id, false)}, true
+                { type, id, texture ->
+                    run {
+                        when (type) {
+                            MinecraftProfileTexture.Type.SKIN -> skinCache[uuid] = Pair(id, false)
+                            MinecraftProfileTexture.Type.CAPE -> capeCache[uuid] = Pair(id, false)
+                            MinecraftProfileTexture.Type.ELYTRA -> elytraCache[uuid] = Pair(id, false)
+                        }
+                        if (type == type)
+                            whenReady.invoke(id, false)
+                    }
+                }, true
             )
         }
     }
 }
+ */
 
+/*
 class StatueArmourFeatureRenderer(private val leggings: BipedEntityModel<PlayerEntity>, val body: BipedEntityModel<PlayerEntity>): ArmorFeatureRenderer<PlayerEntity, BipedEntityModel<PlayerEntity>, BipedEntityModel<PlayerEntity>>(Context, leggings, body) {
 
     object Context: FeatureRendererContext<PlayerEntity, BipedEntityModel<PlayerEntity>> {
@@ -235,6 +248,5 @@ class StatueArmourFeatureRenderer(private val leggings: BipedEntityModel<PlayerE
             }
         }
     }
-
-
 }
+ */

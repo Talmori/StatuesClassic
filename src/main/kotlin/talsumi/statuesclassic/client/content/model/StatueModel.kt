@@ -1,24 +1,17 @@
 package talsumi.statuesclassic.client.content.model
 
 import net.minecraft.client.model.Dilation
+import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.render.entity.model.PlayerEntityModel
 import net.minecraft.entity.player.PlayerEntity
-import talsumi.statuesclassic.client.content.render.blockentity.StatueArmourFeatureRenderer
 import talsumi.statuesclassic.core.StatueData
 
-val standardRenderer = StatueArmourFeatureRenderer.make(false)
-val slimRenderer = StatueArmourFeatureRenderer.make(true)
 
-class StatueModel(val slim: Boolean) : PlayerEntityModel<PlayerEntity>(PlayerEntityModel.getTexturedModelData(Dilation.NONE, slim).root.createPart(64, 64), slim) {
+class StatueModel(val slim: Boolean) : PlayerEntityModel<AbstractClientPlayerEntity>(PlayerEntityModel.getTexturedModelData(Dilation.NONE, slim).root.createPart(64, 64), slim) {
 
     init
     {
         child = false
-    }
-
-    fun getRenderer(): StatueArmourFeatureRenderer
-    {
-        return if (slim) slimRenderer else standardRenderer
     }
 
     fun setAngles(data: StatueData)

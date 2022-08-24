@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.Identifier
@@ -14,13 +15,22 @@ import net.minecraft.world.World
 import talsumi.marderlib.storage.item.ItemStackHandler
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.content.ModBlockEntities
-import talsumi.statuesclassic.content.entity.DummyPlayerEntity
+import talsumi.statuesclassic.client.content.entity.DummyPlayerEntity
+import talsumi.statuesclassic.core.DummyPlayerFactory
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.networking.ServerPacketsOut
 import java.util.*
 
 class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.statue, pos, state), IUpdatableBlockEntity {
 
+    /**
+     * 0: Head
+     * 1: Chest
+     * 2: Legs
+     * 3: Boots
+     * 4: Right hand
+     * 5: Left hand
+     */
     val inventory = ItemStackHandler(6, ::onContentsChanged)
 
     var hasBeenSetup = false
@@ -33,7 +43,10 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
 
     var statueId = UUID.randomUUID()
 
-    var clientFakePlayer: DummyPlayerEntity? = null
+    /**
+     * Note: This is an AbstractClientPlayerEntity on client.
+     */
+    var clientFakePlayer: PlayerEntity? = null
 
     fun setup(block: Block, uuid: UUID, data: StatueData)
     {
@@ -49,7 +62,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         super.setWorld(world)
 
         if (world.isClient)
-            clientFakePlayer = DummyPlayerEntity(this, world, pos, 0f, GameProfile(null, "statuesclassic_fakeplayer"))
+            clientFakePlayer = DummyPlayerFactory.getDummyPlayer(this, world, pos)
     }
 
     fun sendUpdatePacket()

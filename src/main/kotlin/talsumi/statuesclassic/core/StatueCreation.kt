@@ -35,8 +35,9 @@ object StatueCreation {
         val be = world.getBlockEntity(pos)
 
         if (be is StatueBE) {
-            be.leftHandRotate = left;
-            be.rightHandRotate = right;
+            //Joystick rotation is swapped. It's weird.
+            be.leftHandRotate = right;
+            be.rightHandRotate = left;
             be.sendUpdatePacket()
         }
     }
@@ -69,7 +70,13 @@ object StatueCreation {
         data.masterRotate = joystick6X
     }
 
-    fun encodeHandRotation(joystick: Float): Float = joystick * MathHelper.RADIANS_PER_DEGREE
+    /**
+     * Turns joystick position into rotation in degrees.
+     */
+    fun encodeHandRotation(joystick: Float): Float = (joystick * 90f) * MathHelper.RADIANS_PER_DEGREE
 
-    fun decodeHandRotation(rotation: Float): Float = rotation / MathHelper.RADIANS_PER_DEGREE
+    /**
+     * Turns rotation into joystick position
+     */
+    fun decodeHandRotation(rotation: Float): Float = (rotation / 90) * MathHelper.DEGREES_PER_RADIAN
 }

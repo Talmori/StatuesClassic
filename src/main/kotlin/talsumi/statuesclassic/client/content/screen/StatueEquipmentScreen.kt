@@ -44,6 +44,8 @@ class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: Pl
     val leftJoystick: JoystickWidget
     val rightJoystick: JoystickWidget
 
+    var delay = 0f
+
     init
     {
         backgroundHeight = 179
@@ -52,15 +54,17 @@ class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: Pl
 
         addWidgets(leftJoystick, rightJoystick)
 
-        leftJoystick.setPosition(StatueCreation.decodeHandRotation(screenHandler.statue?.leftHandRotate ?: 0f), 0f)
-        rightJoystick.setPosition(StatueCreation.decodeHandRotation(screenHandler.statue?.rightHandRotate ?: 0f), 0f)
+        leftJoystick.setPosition(screenHandler.statue?.rightHandRotate ?: 0f, 0f)
+        rightJoystick.setPosition(screenHandler.statue?.leftHandRotate ?: 0f, 0f)
     }
 
     private fun joystickChange()
     {
-        ClientPacketsOut.sendUpdateStatueHandsPacket(
-            StatueCreation.encodeHandRotation(leftJoystick.getXPosition()),
-            StatueCreation.encodeHandRotation(rightJoystick.getXPosition()))
+        val statue = handler?.statue ?: return
+
+        //Update rotation on client only. When joysticks are released, an update packet will be sent to the server. (See mouseReleased)
+        statue.rightHandRotate = leftJoystick.getXPosition()
+        statue.leftHandRotate = rightJoystick.getXPosition()
     }
 
     override fun mouseDragged(mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double): Boolean
@@ -84,6 +88,11 @@ class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: Pl
             if (widget is JoystickWidget)
                 widget.selected = false
         }
+
+        //Send rotation update packet when joysticks are released
+        ClientPacketsOut.sendUpdateStatueHandsPacket(
+            leftJoystick.getXPosition(),
+            rightJoystick.getXPosition())
 
         return super.mouseReleased(mouseX, mouseY, button)
     }

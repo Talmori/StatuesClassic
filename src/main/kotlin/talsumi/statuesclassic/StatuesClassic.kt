@@ -58,6 +58,7 @@ object StatuesClassic: ModInitializer {
         val sRegTime = System.currentTimeMillis()
         ModBlocks.regAll(Registry.BLOCK, Block::class, MODID)
         ModItems.regAll(Registry.ITEM, Item::class, MODID)
+
         ModBlockEntities.regAll(Registry.BLOCK_ENTITY_TYPE, BlockEntityType::class, MODID)
 
         val eRegTime = System.currentTimeMillis()

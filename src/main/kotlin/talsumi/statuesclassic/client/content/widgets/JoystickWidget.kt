@@ -99,7 +99,7 @@ class JoystickWidget(x: Int, y: Int, width: Int, height: Int, val stickSize: Int
     {
         //Reset stick to centre
         stickX = workingWidth.toFloat()/2+halfStickSize
-        stickY = workingWidth.toFloat()/2+halfStickSize
+        stickY = workingHeight.toFloat()/2+halfStickSize
         callback?.invoke()
     }
 

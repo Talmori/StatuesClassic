@@ -78,6 +78,7 @@ object ServerPacketHandlers {
         val left = buf.readFloat()
         val right = buf.readFloat()
 
+
         server.execute {
             if (player.currentScreenHandler is StatueEquipmentScreenHandler)
                 (player.currentScreenHandler as StatueEquipmentScreenHandler).updateHands(left, right)
