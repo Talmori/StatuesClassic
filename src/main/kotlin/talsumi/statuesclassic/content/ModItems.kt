@@ -9,4 +9,5 @@ import talsumi.statuesclassic.content.item.StatueHammerItem
 object ModItems: EasyRegisterableHolder<Item>() {
 
     val statue_hammer = reg(StatueHammerItem(RegUtil.itemSettings(StatuesClassic.GROUP, maxCount = 1)))
+    val palette = reg(Item(RegUtil.itemSettings(StatuesClassic.GROUP)))
 }

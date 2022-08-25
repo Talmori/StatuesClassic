@@ -79,32 +79,13 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
             cache.setup = true
             cache.pending = false
         }
-
-        /**
-         * Returns the skin data for [uuid], whenever it is ready.
-         * Calling will download data, when it is available this method will return it. Before it is available it will return null.
-         */
-        fun getCachedData(uuid: UUID): CacheData?
-        {
-            val cache = getOrCreateCachedModel(uuid)
-            if (!cache.setup) {
-                if (!cache.pending) {
-                    SkinHandler.getSkin(uuid!!, MinecraftProfileTexture.Type.SKIN, whenReady = { texture, slim -> setupCachedData(cache, slim, texture) })
-                    cache.pending = true
-                }
-
-                return null
-            }
-            else
-                return cache
-        }
     }
 
     //TODO: Shader for colourizing statues by base block
     /**
      * Renders a statue using [data] for rotations. [statue] may be null, in which case armour cannot be rendered
      */
-    fun render(statue: StatueBE?, data: StatueData, uuid: UUID, slim: Boolean, texture: Identifier, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
+    fun render(statue: StatueBE?, data: StatueData, uuid: UUID?, slim: Boolean, texture: Identifier, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
     {
         matrices.push()
         val snapshot = RenderUtil.getSnapshot()
@@ -143,14 +124,14 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         if (!statue.hasBeenSetup)
             return
 
-        val cache = getCachedData(statue.playerUuid!!)
+        val cache = SkinHandler.getCachedSkin(statue.playerUuid ?: return)
 
-        if (cache != null) {
+        if (cache.skin != null) {
             matrices.push()
             matrices.translate(0.5, 1.5, 0.5)
             val facing = statue.cachedState.get(Properties.HORIZONTAL_FACING)
             matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(facing.asRotation()))
-            render(statue, statue.data!!, statue.playerUuid!!, cache.slim, cache.texture!!, tickDelta, matrices, vertexProvider, light, overlay)
+            render(statue, statue.data!!, statue.playerUuid!!, cache.slim!!, cache.skin!!, tickDelta, matrices, vertexProvider, light, overlay)
             matrices.pop()
         }
     }

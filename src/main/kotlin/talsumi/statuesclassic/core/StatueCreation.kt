@@ -6,6 +6,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
 import net.minecraft.world.World
 import talsumi.statuesclassic.content.ModBlocks
+import talsumi.statuesclassic.content.block.AbstractStatueBlock
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import java.util.*
 
@@ -14,13 +15,16 @@ object StatueCreation {
     fun tryCreateStatue(bottomPos: BlockPos, world: World, uuid: UUID, data: StatueData, facing: Direction)
     {
         if (StatuePlacement.canCreateStatueHere(world, bottomPos)) {
+            val state = world.getBlockState(bottomPos)
             val block = world.getBlockState(bottomPos).block
 
             //Sanity check for facing
             if (facing == Direction.UP || facing == Direction.DOWN) return
 
-            world.setBlockState(bottomPos, ModBlocks.statue_parent.defaultState.with(Properties.HORIZONTAL_FACING, facing))
-            world.setBlockState(bottomPos.up(), ModBlocks.statue_child.defaultState)
+            val light = state.luminance.coerceIn(0, 15)
+
+            world.setBlockState(bottomPos, ModBlocks.statue_parent.defaultState.with(Properties.HORIZONTAL_FACING, facing).with(AbstractStatueBlock.lightLevel, light))
+            world.setBlockState(bottomPos.up(), ModBlocks.statue_child.defaultState.with(AbstractStatueBlock.lightLevel, light))
             val be = world.getBlockEntity(bottomPos)
 
             if (be is StatueBE) {
@@ -28,6 +32,19 @@ object StatueCreation {
                 world.server?.execute { be.sendUpdatePacket() }
             }
         }
+    }
+
+    fun modifyStatueLuminance(be: StatueBE, luminance: Int)
+    {
+        val world = be.world ?: return
+        val childPos = be.pos.up()
+        val block = world.getBlockState(be.pos)
+        val childBlock = world.getBlockState(childPos)
+
+        if (block.block !is AbstractStatueBlock || childBlock.block !is AbstractStatueBlock) return
+
+        world.setBlockState(be.pos, block.with(AbstractStatueBlock.lightLevel, luminance))
+        world.setBlockState(childPos, childBlock.with(AbstractStatueBlock.lightLevel, luminance))
     }
 
     fun updateStatueHands(pos: BlockPos, world: World, left: Float, right: Float)

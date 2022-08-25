@@ -1,22 +1,27 @@
 package talsumi.statuesclassic.content.blockentity
 
-import com.mojang.authlib.GameProfile
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.*
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.registry.Registry
 import net.minecraft.world.World
+import talsumi.marderlib.storage.SlotLimitations
 import talsumi.marderlib.storage.item.ItemStackHandler
+import talsumi.marderlib.util.ItemStackUtil
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.content.ModBlockEntities
-import talsumi.statuesclassic.client.content.entity.DummyPlayerEntity
+import talsumi.statuesclassic.content.ModItems
 import talsumi.statuesclassic.core.DummyPlayerFactory
+import talsumi.statuesclassic.core.StatueCreation
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.networking.ServerPacketsOut
 import java.util.*
@@ -31,13 +36,21 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
      * 4: Right hand
      * 5: Left hand
      */
-    val inventory = ItemStackHandler(6, ::onContentsChanged)
+    val inventory = ItemStackHandler(6, ::onContentsChanged, arrayOf(
+        SlotLimitations(0, 0, allowed = { item -> item.item is BlockItem || (item.item as? ArmorItem)?.slotType == EquipmentSlot.HEAD || item.item is Wearable}),
+        SlotLimitations(1, 1, allowed = { item -> (item.item as? ArmorItem)?.slotType == EquipmentSlot.CHEST || item.item is Wearable }),
+        SlotLimitations(2, 2, allowed = { item -> (item.item as? ArmorItem)?.slotType == EquipmentSlot.LEGS || item.item is Wearable }),
+        SlotLimitations(3, 3, allowed = { item -> (item.item as? ArmorItem)?.slotType == EquipmentSlot.FEET || item.item is Wearable })
+    ))
 
     var hasBeenSetup = false
     var playerUuid: UUID? = null
     var data: StatueData? = null
     var block: Block? = null
 
+    var hasCape = false
+    var isColoured = false
+    var hasName = false
     var leftHandRotate = 0f
     var rightHandRotate = 0f
 
@@ -47,6 +60,27 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
      * Note: This is an AbstractClientPlayerEntity on client.
      */
     var clientFakePlayer: PlayerEntity? = null
+
+    fun tick()
+    {
+        clientFakePlayer?.tick()
+    }
+
+    /**
+     * Called when either of the statue's blocks is activated with an item.
+     * Returns true if further processing is to be skipped.
+     */
+    fun onRightClicked(player: PlayerEntity, hand: Hand, item: ItemStack): Boolean
+    {
+        return when (item.item) {
+            Items.LEATHER -> { hasCape = !hasCape; if (hasCape) item.decrement(1) else ItemStackUtil.dropStack(world!!, player.pos, Items.LEATHER.defaultStack); true }
+            Items.PAPER -> { hasName = !hasName; if (hasName) item.decrement(1) else ItemStackUtil.dropStack(world!!, player.pos, Items.PAPER.defaultStack); true }
+            ModItems.palette -> { isColoured = true; item.decrement(1); true }
+            Items.GUNPOWDER -> { StatueCreation.modifyStatueLuminance(this, 0); item.decrement(1); true }
+            Items.GLOWSTONE_DUST -> { StatueCreation.modifyStatueLuminance(this, 15); item.decrement(1); true }
+            else -> false
+        }
+    }
 
     fun setup(block: Block, uuid: UUID, data: StatueData)
     {
@@ -87,6 +121,9 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             buf.writeString(block!!.registryEntry.registryKey().value.toString())
             buf.writeFloat(leftHandRotate)
             buf.writeFloat(rightHandRotate)
+            buf.writeBoolean(hasCape)
+            buf.writeBoolean(isColoured)
+            buf.writeBoolean(hasName)
         }
     }
 
@@ -101,6 +138,9 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             block = Registry.BLOCK.get(Identifier(buf.readString()))
             leftHandRotate = buf.readFloat()
             rightHandRotate = buf.readFloat()
+            hasCape = buf.readBoolean()
+            isColoured = buf.readBoolean()
+            hasName = buf.readBoolean()
         }
     }
 
@@ -115,6 +155,9 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             block = Registry.BLOCK.get(Identifier(nbt.getString("block")))
             leftHandRotate = nbt.getFloat("left_hand_rotate")
             rightHandRotate = nbt.getFloat("right_hand_rotate")
+            hasCape = nbt.getBoolean("has_cape")
+            isColoured = nbt.getBoolean("is_coloured")
+            hasName = nbt.getBoolean("shows_name")
         }
     }
 
@@ -129,6 +172,9 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             nbt.putString("block", block!!.registryEntry.registryKey().value.toString())
             nbt.putFloat("left_hand_rotate", leftHandRotate)
             nbt.putFloat("right_hand_rotate", rightHandRotate)
+            nbt.putBoolean("has_cape", hasCape)
+            nbt.putBoolean("is_coloured", isColoured)
+            nbt.putBoolean("shows_name", hasName)
         }
     }
 }

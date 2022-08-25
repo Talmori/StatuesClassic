@@ -32,6 +32,7 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.widget.TextFieldWidget
 import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.OverlayTexture
+import net.minecraft.client.util.DefaultSkinHelper
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.LiteralText
@@ -44,6 +45,7 @@ import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.client.content.render.blockentity.StatueBERenderer
 import talsumi.statuesclassic.client.content.widgets.ButtonWidget
 import talsumi.statuesclassic.client.content.widgets.JoystickWidget
+import talsumi.statuesclassic.client.core.SkinHandler
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.core.StatueCreation
 import talsumi.statuesclassic.core.StatueData
@@ -194,37 +196,35 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     private fun drawModel(matrices: MatrixStack, size: Float, x: Double, y: Double, mouseX: Int, mouseY: Int, delta: Float)
     {
         //I have no idea what some of this is, it's just copied from InventoryScreen#drawEntity
-        if (uuid != null) {
-            val skinData = StatueBERenderer.getCachedData(uuid!!) ?: return
+        val skin = if (uuid != null) SkinHandler.getCachedSkin(uuid!!).getSkinOrDefault() else DefaultSkinHelper.getTexture()
 
-            matrices.push()
-            val snapshot = RenderUtil.getSnapshot()
+        matrices.push()
+        val snapshot = RenderUtil.getSnapshot()
 
-            val viewStack = RenderSystem.getModelViewStack()
-            viewStack.push()
-            viewStack.translate(x, y, 1050.0)
-            viewStack.scale(1.0f, 1.0f, -1.0f)
-            RenderSystem.applyModelViewMatrix()
+        val viewStack = RenderSystem.getModelViewStack()
+        viewStack.push()
+        viewStack.translate(x, y, 1050.0)
+        viewStack.scale(1.0f, 1.0f, -1.0f)
+        RenderSystem.applyModelViewMatrix()
 
-            val ourMatrix = MatrixStack()
-            ourMatrix.translate(0.0, 0.0, 1000.0)
-            ourMatrix.scale(size, -size, -size)
+        val ourMatrix = MatrixStack()
+        ourMatrix.translate(0.0, 0.0, 1000.0)
+        ourMatrix.scale(size, -size, -size)
 
-            DiffuseLighting.method_34742()
+        DiffuseLighting.method_34742()
 
-            val immediate = MinecraftClient.getInstance().bufferBuilders.entityVertexConsumers
-            RenderSystem.runAsFancy {
-                renderer.render(null, data, uuid!!, skinData.slim, skinData.texture!!, delta, ourMatrix, immediate, fullbright, OverlayTexture.DEFAULT_UV)
-            }
-            immediate.draw()
-
-            viewStack.pop()
-            RenderSystem.applyModelViewMatrix()
-            DiffuseLighting.enableGuiDepthLighting()
-
-            snapshot.restore()
-            matrices.pop()
+        val immediate = MinecraftClient.getInstance().bufferBuilders.entityVertexConsumers
+        RenderSystem.runAsFancy {// TODO: Slim skins
+            renderer.render(null, data, uuid, false, skin, delta, ourMatrix, immediate, fullbright, OverlayTexture.DEFAULT_UV)
         }
+        immediate.draw()
+
+        viewStack.pop()
+        RenderSystem.applyModelViewMatrix()
+        DiffuseLighting.enableGuiDepthLighting()
+
+        snapshot.restore()
+        matrices.pop()
     }
 
     private fun skinAvailable(type: MinecraftProfileTexture.Type, id: Identifier, texture: MinecraftProfileTexture)

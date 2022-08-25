@@ -21,6 +21,19 @@ class StatueChildBlock(settings: Settings) : AbstractStatueBlock(settings) {
         super.neighborUpdate(state, world, pos, block, fromPos, notify)
     }
 
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hand: Hand, hit: BlockHitResult): ActionResult
+    {
+        val be = world.getBlockEntity(pos.down()) ?: return ActionResult.FAIL
+
+        if (world.isClient) return ActionResult.SUCCESS
+
+        if (be is StatueBE)
+            if (!be.onRightClicked(player, hand, player.getStackInHand(hand)))
+                player.openHandledScreen(StatueEquipmentScreenHandler.makeFactory(be))
+
+        return ActionResult.SUCCESS
+    }
+
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean)
     {
         if (!state.isOf(newState.block)) {
@@ -29,17 +42,5 @@ class StatueChildBlock(settings: Settings) : AbstractStatueBlock(settings) {
         }
 
         super.onStateReplaced(state, world, pos, newState, moved)
-    }
-
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hand: Hand, hit: BlockHitResult): ActionResult
-    {
-        val be = world.getBlockEntity(pos.down()) ?: return ActionResult.FAIL
-
-        if (world.isClient) return ActionResult.SUCCESS
-
-        if (be is StatueBE)
-            player.openHandledScreen(StatueEquipmentScreenHandler.makeFactory(be))
-
-        return ActionResult.SUCCESS
     }
 }

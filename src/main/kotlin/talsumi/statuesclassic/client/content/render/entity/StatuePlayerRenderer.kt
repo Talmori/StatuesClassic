@@ -42,11 +42,10 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
 
         //Render armour & held items
         if (statue != null) {
-            val player = statue.clientFakePlayer ?: return
-            if (player !is AbstractClientPlayerEntity) return
+            val player = statue.clientFakePlayer as? AbstractClientPlayerEntity ?: return
 
             for (feature in features) {
-                if (feature is CapeFeatureRenderer) continue
+                //if (feature is CapeFeatureRenderer) continue
                 var feature = feature
 
                 //Ignore vanilla's held item renderer and use our own that supports rotation

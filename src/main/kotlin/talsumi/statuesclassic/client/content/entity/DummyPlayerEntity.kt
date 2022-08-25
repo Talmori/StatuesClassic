@@ -2,10 +2,13 @@ package talsumi.statuesclassic.client.content.entity
 
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.network.AbstractClientPlayerEntity
+import net.minecraft.client.render.entity.PlayerModelPart
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ItemStack
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
+import talsumi.statuesclassic.client.core.SkinHandler
 import talsumi.statuesclassic.content.blockentity.StatueBE
 
 //TODO: Cape support.
@@ -17,12 +20,51 @@ import talsumi.statuesclassic.content.blockentity.StatueBE
 //From ElytraFeatureRenderer
 /**
  * A false player entity that delegates to a [StatueBE] for some inventory operations. Used by [StatuePlayerRenderer] for some operations that require an actual player.
+ * This entity does not exist in the world!
  */
 class DummyPlayerEntity(val statue: StatueBE, world: ClientWorld, pos: BlockPos, profile: GameProfile) : AbstractClientPlayerEntity(world, profile)
 {
     init
     {
         this.setPos(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+    }
+
+    override fun tick()
+    {
+        prevCapeX = capeX
+        prevCapeY = capeY
+        prevCapeZ = capeZ
+        val d = this.x - capeX
+        val e = this.y - capeY
+        val f = this.z - capeZ
+        val g = 10.0
+        if (d > 10.0) {
+            capeX = this.x
+            prevCapeX = capeX
+        }
+        if (f > 10.0) {
+            capeZ = this.z
+            prevCapeZ = capeZ
+        }
+        if (e > 10.0) {
+            capeY = this.y
+            prevCapeY = capeY
+        }
+        if (d < -10.0) {
+            capeX = this.x
+            prevCapeX = capeX
+        }
+        if (f < -10.0) {
+            capeZ = this.z
+            prevCapeZ = capeZ
+        }
+        if (e < -10.0) {
+            capeY = this.y
+            prevCapeY = capeY
+        }
+        capeX += d * 0.25
+        capeZ += f * 0.25
+        capeY += e * 0.25
     }
 
     override fun isSpectator(): Boolean = false
@@ -46,4 +88,15 @@ class DummyPlayerEntity(val statue: StatueBE, world: ClientWorld, pos: BlockPos,
     override fun getMainHandStack(): ItemStack = statue.inventory.getStack(4)
 
     override fun getOffHandStack(): ItemStack = statue.inventory.getStack(5)
+    override fun hasSkinTexture(): Boolean = true
+    override fun getSkinTexture(): Identifier? = statue.playerUuid?.let { SkinHandler.getCachedSkin(it).getSkinOrDefault() }
+    override fun canRenderCapeTexture(): Boolean = statue.hasCape
+
+    override fun getCapeTexture(): Identifier? = statue.playerUuid?.let { SkinHandler.getCachedSkin(it).cape ?: null }
+
+    override fun canRenderElytraTexture(): Boolean = canRenderCapeTexture()
+
+    override fun getElytraTexture(): Identifier? = statue.playerUuid?.let { SkinHandler.getCachedSkin(it).elytra ?: null }
+
+    override fun isPartVisible(modelPart: PlayerModelPart?): Boolean = true
 }

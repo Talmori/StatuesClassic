@@ -10,5 +10,10 @@ import talsumi.statuesclassic.client.content.entity.DummyPlayerEntity
 
 object DummyPlayerFactory {
 
-    fun getDummyPlayer(statue: StatueBE, world: World, pos: BlockPos): PlayerEntity = DummyPlayerEntity(statue, world as ClientWorld, pos, GameProfile(null, "statuesclassic_fakeplayer"))
+    fun getDummyPlayer(statue: StatueBE, world: World, pos: BlockPos): PlayerEntity
+    {
+        val ent = DummyPlayerEntity(statue, world as ClientWorld, pos, GameProfile(null, "statuesclassic_fakeplayer"))
+        ent.setPos(pos.x + 0.5, pos.y + 0.0, pos.z + 0.5)
+        return ent
+    }
 }

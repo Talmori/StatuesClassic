@@ -4,57 +4,61 @@ import com.mojang.authlib.GameProfile
 import com.mojang.authlib.minecraft.MinecraftProfileTexture
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.util.DefaultSkinHelper
 import net.minecraft.util.Identifier
 import java.util.*
 
 object SkinHandler {
 
-    private val skinCache = HashMap<UUID, Pair<Identifier, Boolean>>()
-    private val capeCache = HashMap<UUID, Pair<Identifier, Boolean>>()
-    private val elytraCache = HashMap<UUID, Pair<Identifier, Boolean>>()
-
-    private fun getCache(type: MinecraftProfileTexture.Type) = when (type) {
-        MinecraftProfileTexture.Type.SKIN -> skinCache
-        MinecraftProfileTexture.Type.CAPE -> capeCache
-        MinecraftProfileTexture.Type.ELYTRA -> elytraCache
-    }
+    private val cache = HashMap<UUID, SkinData>()
 
     /**
-     * Returns the skin data for [uuid], whenever it is ready.
-     * Calling will download data, when it is available this method will return it. Before it is available it will return null.
+     * Call to get a [SkinData] object. Its values will be null until they have been loaded by the game.
      */
-    fun getCachedSkin(uuid: UUID, type: Type)
+    fun getCachedSkin(uuid: UUID): SkinData
     {
-        val cache = getCache(type)
-
         if (!cache.containsKey(uuid)) {
+            val data = SkinData(null, null, null, null)
+            cache[uuid] = data
 
+            loadSkin(uuid, Type.SKIN) { id -> data!!.skin = id }
+            loadSkin(uuid, Type.CAPE) { id -> data!!.cape = id }
+            loadSkin(uuid, Type.ELYTRA) { id -> data!!.elytra = id }
+            data.slim = false //TODO: Slim skins
+
+            return data
+        }
+        else {
+            return cache[uuid]!!
         }
     }
 
-    //TODO: Slim skins
-    fun getSkin(uuid: UUID, type: MinecraftProfileTexture.Type, whenReady: (Identifier, Boolean) -> Unit)
+    fun loadSkin(uuid: UUID, type: Type, whenReady: (Identifier) -> Unit)
     {
-        val cache = getCache(type)
-        if (cache.containsKey(uuid)) {
-            whenReady.invoke(cache[uuid]!!.first, cache[uuid]!!.second)
+        MinecraftClient.getInstance().skinProvider.loadSkin(
+            GameProfile(uuid, null),
+            { textureType, id, mcProfileTexture ->
+                run {
+                    if (textureType == type)
+                        whenReady.invoke(id)
+                }
+            }, true
+        )
+    }
+
+    class SkinData(var skin: Identifier?, var cape: Identifier?, var elytra: Identifier?, var slim: Boolean?, private var complete: Boolean = false) {
+
+        fun isComplete(): Boolean
+        {
+            return if (complete) true else {
+                complete = skin != null && cape != null && elytra != null && slim != null
+                complete
+            }
         }
-        else {
-            MinecraftClient.getInstance().skinProvider.loadSkin(
-                GameProfile(uuid, null),
-                { textureType, id, mcProfileTexture ->
-                    run {
-                        when (textureType) {
-                            MinecraftProfileTexture.Type.SKIN -> skinCache[uuid] = Pair(id, false)
-                            MinecraftProfileTexture.Type.CAPE -> capeCache[uuid] = Pair(id, false)
-                            MinecraftProfileTexture.Type.ELYTRA -> elytraCache[uuid] = Pair(id, false)
-                        }
-                        if (textureType == type)
-                            whenReady.invoke(id, false)
-                        println(mcProfileTexture.getMetadata("slim"))
-                    }
-                }, true
-            )
-        }
+
+        /**
+         * Returns the held skin, or if it hasn't been loaded yet, the default one.
+         */
+        fun getSkinOrDefault(): Identifier = skin ?:DefaultSkinHelper.getTexture()
     }
 }
