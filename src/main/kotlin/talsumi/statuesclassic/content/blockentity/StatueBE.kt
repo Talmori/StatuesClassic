@@ -21,7 +21,7 @@ import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.content.ModBlockEntities
 import talsumi.statuesclassic.content.ModItems
 import talsumi.statuesclassic.core.DummyPlayerFactory
-import talsumi.statuesclassic.core.StatueCreation
+import talsumi.statuesclassic.core.StatueHelper
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.networking.ServerPacketsOut
 import java.util.*
@@ -45,6 +45,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
 
     var hasBeenSetup = false
     var playerUuid: UUID? = null
+    var playerName: String? = null
     var data: StatueData? = null
     var block: Block? = null
 
@@ -61,10 +62,13 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
      */
     var clientFakePlayer: PlayerEntity? = null
 
+    //Currently disabled. (See StatueParentBlock to re-enable if needed)
+    //Only called on client.
+    /*
     fun tick()
     {
         clientFakePlayer?.tick()
-    }
+    }*/
 
     /**
      * Called when either of the statue's blocks is activated with an item.
@@ -72,22 +76,31 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
      */
     fun onRightClicked(player: PlayerEntity, hand: Hand, item: ItemStack): Boolean
     {
-        return when (item.item) {
+        val override = when (item.item) {
             Items.LEATHER -> { hasCape = !hasCape; if (hasCape) item.decrement(1) else ItemStackUtil.dropStack(world!!, player.pos, Items.LEATHER.defaultStack); true }
             Items.PAPER -> { hasName = !hasName; if (hasName) item.decrement(1) else ItemStackUtil.dropStack(world!!, player.pos, Items.PAPER.defaultStack); true }
-            ModItems.palette -> { isColoured = true; item.decrement(1); true }
-            Items.GUNPOWDER -> { StatueCreation.modifyStatueLuminance(this, 0); item.decrement(1); true }
-            Items.GLOWSTONE_DUST -> { StatueCreation.modifyStatueLuminance(this, 15); item.decrement(1); true }
+            ModItems.palette -> { if (!isColoured) item.decrement(1); isColoured = true; true }
+            Items.GUNPOWDER -> { if (StatueHelper.getStatueLuminance(this) > 0) { StatueHelper.modifyStatueLuminance(this, 0); item.decrement(1);}; true }
+            Items.GLOWSTONE_DUST -> { if (StatueHelper.getStatueLuminance(this) < 15) { StatueHelper.modifyStatueLuminance(this, 15); item.decrement(1);}; true }
             else -> false
         }
+
+        if (override) {
+            sendUpdatePacket()
+            markDirty()
+        }
+
+        return override
     }
 
-    fun setup(block: Block, uuid: UUID, data: StatueData)
+    fun setup(block: Block, name: String, uuid: UUID, data: StatueData)
     {
-        playerUuid = uuid
+        this.playerUuid = uuid
         this.data = data
+        this.playerName = name
         this.block = block
         hasBeenSetup = true
+        markDirty()
         StatuesClassic.LOGGER.info("Created statue at $pos, for player $uuid, made of $block")
     }
 
@@ -116,6 +129,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         if (hasBeenSetup) {
             inventory.saveToByteBuf(buf)
             buf.writeUuid(playerUuid)
+            buf.writeString(playerName)
             buf.writeBoolean(data != null)
             data?.writePacket(buf)
             buf.writeString(block!!.registryEntry.registryKey().value.toString())
@@ -133,6 +147,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         if (hasBeenSetup) {
             inventory.loadFromByteBuf(buf)
             playerUuid = buf.readUuid()
+            playerName = buf.readString()
             if (buf.readBoolean())
                 data = StatueData.fromPacket(buf)
             block = Registry.BLOCK.get(Identifier(buf.readString()))
@@ -146,12 +161,12 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
 
     override fun readNbt(nbt: NbtCompound)
     {
-        super.readNbt(nbt)
         inventory.load(nbt.getCompound("inventory"))
         hasBeenSetup = nbt.getBoolean("has_setup")
         if (hasBeenSetup) {
             data = StatueData.load(nbt.getCompound("statue_data"))
             playerUuid = nbt.getUuid("player_uuid")
+            playerName = nbt.getString("player_name")
             block = Registry.BLOCK.get(Identifier(nbt.getString("block")))
             leftHandRotate = nbt.getFloat("left_hand_rotate")
             rightHandRotate = nbt.getFloat("right_hand_rotate")
@@ -163,12 +178,12 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
 
     override fun writeNbt(nbt: NbtCompound)
     {
-        super.writeNbt(nbt)
         nbt.put("inventory", inventory.save())
         nbt.putBoolean("has_setup", hasBeenSetup)
         if (hasBeenSetup) {
             nbt.put("statue_data", data!!.save())
             nbt.putUuid("player_uuid", playerUuid!!)
+            nbt.putString("player_name", playerName!!)
             nbt.putString("block", block!!.registryEntry.registryKey().value.toString())
             nbt.putFloat("left_hand_rotate", leftHandRotate)
             nbt.putFloat("right_hand_rotate", rightHandRotate)

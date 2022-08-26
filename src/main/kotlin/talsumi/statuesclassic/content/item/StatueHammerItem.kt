@@ -10,7 +10,7 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
 import net.minecraft.world.World
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
-import talsumi.statuesclassic.core.StatuePlacement
+import talsumi.statuesclassic.core.StatueHelper
 
 class StatueHammerItem(settings: Settings) : Item(settings) {
 
@@ -27,17 +27,17 @@ class StatueHammerItem(settings: Settings) : Item(settings) {
         val state = world.getBlockState(pos)
         val player = ctx.player ?: return ActionResult.FAIL
 
-        if (!StatuePlacement.isBlockValidForStatue(world, pos))
+        if (!StatueHelper.isBlockValidForStatue(world, pos))
             return ActionResult.FAIL
 
         val down = pos.down()
         val up = pos.up()
 
         //Check up for second block
-        if (world.getBlockState(up) == state && StatuePlacement.isBlockValidForStatue(world, up))
+        if (world.getBlockState(up) == state && StatueHelper.isBlockValidForStatue(world, up))
             player.openHandledScreen(StatueCreationScreenHandler.makeFactory(player, ctx.side, pos, world))
         //Check down for second block
-        else if (world.getBlockState(down) == state && StatuePlacement.isBlockValidForStatue(world, down))
+        else if (world.getBlockState(down) == state && StatueHelper.isBlockValidForStatue(world, down))
             player.openHandledScreen(StatueCreationScreenHandler.makeFactory(player, ctx.side, down, world))
 
         return ActionResult.SUCCESS

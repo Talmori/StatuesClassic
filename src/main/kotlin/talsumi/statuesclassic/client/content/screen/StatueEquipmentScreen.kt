@@ -34,17 +34,17 @@ import talsumi.marderlib.screen.EnhancedScreen
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.client.content.widgets.JoystickWidget
 import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
-import talsumi.statuesclassic.core.StatueCreation
 import talsumi.statuesclassic.networking.ClientPacketsOut
 
 //TODO: Equipment screen with preview
 class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: PlayerInventory?, title: Text?) :
     EnhancedScreen<StatueEquipmentScreenHandler>(handler, inventory, title, Identifier(StatuesClassic.MODID, "textures/gui/statue_equipment.png")) {
 
-    val leftJoystick: JoystickWidget
-    val rightJoystick: JoystickWidget
+    private val leftJoystick: JoystickWidget
+    private val rightJoystick: JoystickWidget
 
     var delay = 0f
+    var setup = false
 
     init
     {
@@ -56,10 +56,13 @@ class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: Pl
 
         leftJoystick.setPosition(screenHandler.statue?.rightHandRotate ?: 0f, 0f)
         rightJoystick.setPosition(screenHandler.statue?.leftHandRotate ?: 0f, 0f)
+
+        setup = true
     }
 
     private fun joystickChange()
     {
+        if (!setup) return //Ignore changes until [init] has finished.
         val statue = handler?.statue ?: return
 
         //Update rotation on client only. When joysticks are released, an update packet will be sent to the server. (See mouseReleased)

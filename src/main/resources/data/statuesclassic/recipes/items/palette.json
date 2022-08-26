@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "rgb",
+    " p "
+  ],
+  "key": {
+    "r": {
+      "tag": "c:red_dyes"
+    },
+    "g": {
+      "tag": "c:blue_dyes"
+    },
+    "b": {
+      "tag": "c:green_dyes"
+    },
+    "p": {
+      "tag": "minecraft:oak_pressure_plate"
+    }
+  },
+  "result": {
+    "item": "statuesclassic:palette"
+  }
+}

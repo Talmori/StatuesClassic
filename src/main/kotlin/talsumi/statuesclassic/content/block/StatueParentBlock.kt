@@ -64,9 +64,11 @@ class StatueParentBlock(settings: Settings) : AbstractStatueBlock(settings), Blo
     }
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = StatueBE(pos, state)
-    override fun <T : BlockEntity?> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>?
+
+    //Not needed currently.
+    /*override fun <T : BlockEntity?> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>?
     {
         //We only need to tick clientside.
         return if (world.isClient) BlockEntityTicker { world, pos, state, be ->  (be as? StatueBE)?.tick() } else null
-    }
+    }*/
 }

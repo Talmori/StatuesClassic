@@ -38,7 +38,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import talsumi.marderlib.screenhandler.EnhancedScreenHandler
 import talsumi.statuesclassic.content.ModScreenHandlers
-import talsumi.statuesclassic.core.StatueCreation
+import talsumi.statuesclassic.core.StatueHelper
 import talsumi.statuesclassic.core.StatueData
 import java.util.*
 
@@ -64,11 +64,11 @@ class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val 
 
     }
 
-    fun form(uuid: UUID, data: StatueData)
+    fun form(name: String, uuid: UUID, data: StatueData)
     {
         if (parentPos != null && world != null) {
-            val direction = if (hitFace == Direction.UP || hitFace == Direction.DOWN) playerFacing!!.opposite else hitFace!!
-            StatueCreation.tryCreateStatue(parentPos!!, world!!, uuid, data, direction)
+            val direction = if (hitFace == Direction.UP || hitFace == Direction.DOWN) playerFacing!!.opposite else hitFace!!.opposite
+            StatueHelper.tryCreateStatue(parentPos!!, world!!, name, uuid, data, direction)
         }
         for (listener in getListeners())
             listener.marderlib_getOwningPlayer().closeHandledScreen()

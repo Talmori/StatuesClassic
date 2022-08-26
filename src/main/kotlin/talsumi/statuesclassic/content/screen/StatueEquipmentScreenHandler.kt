@@ -34,7 +34,6 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.NamedScreenHandlerFactory
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.server.network.ServerPlayerEntity
@@ -44,7 +43,7 @@ import talsumi.marderlib.screenhandler.EnhancedScreenHandler
 import talsumi.statuesclassic.content.ModBlockEntities
 import talsumi.statuesclassic.content.ModScreenHandlers
 import talsumi.statuesclassic.content.blockentity.StatueBE
-import talsumi.statuesclassic.core.StatueCreation
+import talsumi.statuesclassic.core.StatueHelper
 
 class StatueEquipmentScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val inv: Inventory, val statue: StatueBE?) : EnhancedScreenHandler(type, syncId) {
 
@@ -69,7 +68,7 @@ class StatueEquipmentScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val
     fun updateHands(left: Float, right: Float)
     {
         if (statue != null)
-            StatueCreation.updateStatueHands(statue.pos, statue.world ?: return, left, right)
+            StatueHelper.updateStatueHands(statue.pos, statue.world ?: return, left, right)
     }
 
     override fun canUse(player: PlayerEntity): Boolean

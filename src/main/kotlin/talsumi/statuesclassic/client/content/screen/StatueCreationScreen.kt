@@ -47,7 +47,7 @@ import talsumi.statuesclassic.client.content.widgets.ButtonWidget
 import talsumi.statuesclassic.client.content.widgets.JoystickWidget
 import talsumi.statuesclassic.client.core.SkinHandler
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
-import talsumi.statuesclassic.core.StatueCreation
+import talsumi.statuesclassic.core.StatueHelper
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.networking.ClientPacketsOut
 import java.util.*
@@ -114,7 +114,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
     private fun joystickChange()
     {
-        StatueCreation.applyJoystickAnglesToStatueData(data,
+        StatueHelper.applyJoystickAnglesToStatueData(data,
             joystick1.getYPosition(),
             joystick1.getXPosition(),
             joystick2.getYPosition(),
@@ -134,7 +134,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
         if (uuid == null)
             return
 
-        ClientPacketsOut.sendFormStatuePacket(uuid!!, data)
+        ClientPacketsOut.sendFormStatuePacket(lastName, uuid!!, data)
     }
 
     fun randomize()

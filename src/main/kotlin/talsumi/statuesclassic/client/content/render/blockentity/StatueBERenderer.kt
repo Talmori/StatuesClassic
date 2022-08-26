@@ -35,6 +35,7 @@ import net.minecraft.client.render.entity.EntityRendererFactory
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3f
 import talsumi.marderlib.util.RenderUtil
 import talsumi.statuesclassic.client.content.model.StatueModel
@@ -129,8 +130,7 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         if (cache.skin != null) {
             matrices.push()
             matrices.translate(0.5, 1.5, 0.5)
-            val facing = statue.cachedState.get(Properties.HORIZONTAL_FACING)
-            matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(facing.asRotation()))
+
             render(statue, statue.data!!, statue.playerUuid!!, cache.slim!!, cache.skin!!, tickDelta, matrices, vertexProvider, light, overlay)
             matrices.pop()
         }

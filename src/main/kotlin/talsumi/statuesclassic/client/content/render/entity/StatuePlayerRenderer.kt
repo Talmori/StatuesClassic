@@ -2,60 +2,103 @@ package talsumi.statuesclassic.client.content.render.entity
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.AbstractClientPlayerEntity
+import net.minecraft.client.render.OverlayTexture
+import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.render.VertexConsumerProvider
 import net.minecraft.client.render.entity.EntityRendererFactory
 import net.minecraft.client.render.entity.PlayerEntityRenderer
+import net.minecraft.client.render.entity.PlayerModelPart
 import net.minecraft.client.render.entity.feature.CapeFeatureRenderer
 import net.minecraft.client.render.entity.feature.FeatureRendererContext
-import net.minecraft.client.render.entity.feature.HeldItemFeatureRenderer
 import net.minecraft.client.render.entity.feature.PlayerHeldItemFeatureRenderer
 import net.minecraft.client.render.entity.model.EntityModel
 import net.minecraft.client.render.entity.model.ModelWithArms
 import net.minecraft.client.render.entity.model.ModelWithHead
 import net.minecraft.client.render.entity.model.PlayerEntityModel
-import net.minecraft.client.render.item.HeldItemRenderer
 import net.minecraft.client.render.model.json.ModelTransformation
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.state.property.Properties
+import net.minecraft.text.Text
 import net.minecraft.util.Arm
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3f
+import net.minecraft.world.RaycastContext
 import talsumi.statuesclassic.client.content.model.StatueModel
 import talsumi.statuesclassic.content.blockentity.StatueBE
-import talsumi.statuesclassic.core.StatueCreation
+import talsumi.statuesclassic.core.StatueHelper
 import java.util.*
 
 class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFactory.Context?, slim: Boolean) : PlayerEntityRenderer(ctx, slim) {
 
     val heldItemFeatureRendererOverride = StatueHeldItemFeatureRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>>(this)
+    val capeFeatureRendererOverride = StatueCapeFeatureRenderer(this)
 
     /**
      * Getter for supplying [FeatureRenderer]s with the proper context model.
      */
     override fun getModel(): PlayerEntityModel<AbstractClientPlayerEntity> = statueModel
 
-    fun render(statue: StatueBE?, tickDelta: Float, matrices: MatrixStack, vertex: VertexConsumer, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
+    fun render(statue: StatueBE, tickDelta: Float, matrices: MatrixStack, vertex: VertexConsumer, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
     {
+        //Render the statue model.
+        matrices.push()
+
+        //Rotate to match statue facing
+        val facing = statue.cachedState.get(Properties.HORIZONTAL_FACING)
+        var rotate = facing.asRotation()
+        //if (facing == Direction.NORTH || facing == Direction.SOUTH)
+        //    rotate += 180f
+        matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rotate))
+
         statueModel.render(matrices, vertex, light, overlay, 1f, 1f, 1f, 1f)
 
-        //Render armour & held items
-        if (statue != null) {
-            val player = statue.clientFakePlayer as? AbstractClientPlayerEntity ?: return
+        //Render features
+        val player = statue.clientFakePlayer as? AbstractClientPlayerEntity ?: return
+        for (feature in features) {
+            var feature = feature
 
-            for (feature in features) {
-                //if (feature is CapeFeatureRenderer) continue
-                var feature = feature
+            //Ignore vanilla's held item renderer and use our own that supports rotation
+            if (feature is PlayerHeldItemFeatureRenderer) {
+                feature = heldItemFeatureRendererOverride
+                feature.rightRotation = StatueHelper.encodeHandRotation(statue.rightHandRotate)
+                feature.leftRotation = StatueHelper.encodeHandRotation(statue.leftHandRotate)
+            }
+            //Use our own cape renderer. Like vanilla ours delegates to a AbstractClientPlayerEntity (DummyPlayerEntity)
+            else if (feature is CapeFeatureRenderer) {
+                feature = capeFeatureRendererOverride
+            }
 
-                //Ignore vanilla's held item renderer and use our own that supports rotation
-                if (feature is PlayerHeldItemFeatureRenderer) {
-                    feature = heldItemFeatureRendererOverride
-                    feature.rightRotation = StatueCreation.encodeHandRotation(statue.rightHandRotate)
-                    feature.leftRotation = StatueCreation.encodeHandRotation(statue.leftHandRotate)
-                }
+            matrices.push()
+            feature.render(matrices, vertexProvider, light, player, 0f, 0f, tickDelta, 0f, player.headYaw, player.pitch)
+            matrices.pop()
+        }
 
-                feature.render(matrices, vertexProvider, light, player, 0f, 0f, tickDelta, 0f, player.headYaw, player.pitch)
+        matrices.pop()
+
+        //Render nametag if applicable
+        if (statue.hasName && statue.clientFakePlayer is AbstractClientPlayerEntity) {
+            val mc = MinecraftClient.getInstance()
+
+            //Raycast so we don't render when behind blocks.
+            val player = mc.player ?: return
+            val cast = mc.world?.raycast(RaycastContext(
+                player.getCameraPosVec(tickDelta),
+                statue.clientFakePlayer?.pos?.add(0.0, 2.1, 0.0) ?: return,
+                RaycastContext.ShapeType.VISUAL,
+                RaycastContext.FluidHandling.NONE,
+                mc.player))
+
+            if (cast?.blockPos == statue.pos.up() || cast?.blockPos == statue.pos.up(2)) {
+                matrices.push()
+                matrices.scale(1f, -1f, -1f)
+                matrices.translate(0.0, -1.4, 0.0)
+                renderLabelIfPresent(statue.clientFakePlayer as AbstractClientPlayerEntity, Text.of(statue.playerName), matrices, vertexProvider, light)
+                matrices.pop()
             }
         }
     }
@@ -79,6 +122,22 @@ class StatueHeldItemFeatureRenderer<T, M>(context: FeatureRendererContext<T, M>)
             matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(if (arm == Arm.RIGHT) rightRotation else leftRotation)) //Rotate item
             matrices.translate(0.0, 0.125, -0.125) //Centre item on rotation
             MinecraftClient.getInstance().heldItemRenderer.renderItem(entity, stack, transformationMode, bl, matrices, vertexConsumers, light)
+            matrices.pop()
+        }
+    }
+}
+
+class StatueCapeFeatureRenderer(context: FeatureRendererContext<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>>) : CapeFeatureRenderer(context) {
+    override fun render(matrices: MatrixStack, vertexConsumerProvider: VertexConsumerProvider, light: Int, player: AbstractClientPlayerEntity, limbAngle: Float, limbDistance: Float, tickDelta: Float, animationProgress: Float, headYaw: Float, headPitch: Float)
+    {
+        if (player.canRenderCapeTexture() && player.isPartVisible(PlayerModelPart.CAPE) && player.capeTexture != null && !player.getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA)) {
+
+            matrices.push()
+            matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180.0f))
+            matrices.translate(0.0, 0.0, -0.16)
+            matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-8.0f))
+            val vertexes = vertexConsumerProvider.getBuffer(RenderLayer.getEntitySolid(player.capeTexture))
+            (this.contextModel as PlayerEntityModel<*>).renderCape(matrices, vertexes, light, OverlayTexture.DEFAULT_UV)
             matrices.pop()
         }
     }

@@ -10,11 +10,30 @@ import talsumi.statuesclassic.content.block.AbstractStatueBlock
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import java.util.*
 
-object StatueCreation {
+object StatueHelper {
 
-    fun tryCreateStatue(bottomPos: BlockPos, world: World, uuid: UUID, data: StatueData, facing: Direction)
+    fun isBlockValidForStatue(world: World, pos: BlockPos): Boolean
     {
-        if (StatuePlacement.canCreateStatueHere(world, bottomPos)) {
+        val state = world.getBlockState(pos)
+        if (state.hasBlockEntity() || world.getBlockEntity(pos) != null)
+            return false
+        if (state.isAir || !state.isFullCube(world, pos))
+            return false
+
+        return true
+    }
+
+    fun canCreateStatueHere(world: World, pos: BlockPos): Boolean
+    {
+        val state = world.getBlockState(pos)
+        val stateUp = world.getBlockState(pos.up())
+
+        return isBlockValidForStatue(world, pos) && isBlockValidForStatue(world, pos.up()) && state == stateUp
+    }
+
+    fun tryCreateStatue(bottomPos: BlockPos, world: World, name: String, uuid: UUID, data: StatueData, facing: Direction)
+    {
+        if (canCreateStatueHere(world, bottomPos)) {
             val state = world.getBlockState(bottomPos)
             val block = world.getBlockState(bottomPos).block
 
@@ -28,7 +47,7 @@ object StatueCreation {
             val be = world.getBlockEntity(bottomPos)
 
             if (be is StatueBE) {
-                be.setup(block, uuid, data)
+                be.setup(block, name, uuid, data)
                 world.server?.execute { be.sendUpdatePacket() }
             }
         }
@@ -45,7 +64,10 @@ object StatueCreation {
 
         world.setBlockState(be.pos, block.with(AbstractStatueBlock.lightLevel, luminance))
         world.setBlockState(childPos, childBlock.with(AbstractStatueBlock.lightLevel, luminance))
+        be.markDirty()
     }
+
+    fun getStatueLuminance(be: StatueBE): Int = be.cachedState.get(AbstractStatueBlock.lightLevel)
 
     fun updateStatueHands(pos: BlockPos, world: World, left: Float, right: Float)
     {
@@ -55,6 +77,7 @@ object StatueCreation {
             //Joystick rotation is swapped. It's weird.
             be.leftHandRotate = right;
             be.rightHandRotate = left;
+            be.markDirty()
             be.sendUpdatePacket()
         }
     }

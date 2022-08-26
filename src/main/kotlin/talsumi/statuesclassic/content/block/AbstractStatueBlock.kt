@@ -22,6 +22,8 @@ abstract class AbstractStatueBlock(settings: Settings) : Block(settings), Waterl
 
     companion object {
         val lightLevel = IntProperty.of("light_level", 0, 15)
+
+        fun luminance(state: BlockState): Int = state.get(lightLevel)
     }
 
     init

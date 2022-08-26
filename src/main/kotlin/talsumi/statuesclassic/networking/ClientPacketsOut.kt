@@ -51,9 +51,10 @@ object ClientPacketsOut {
         ClientPlayNetworking.send(request_block_entity_update, buf)
     }
 
-    fun sendFormStatuePacket(uuid: UUID, data: StatueData)
+    fun sendFormStatuePacket(name: String, uuid: UUID, data: StatueData)
     {
         val buf = PacketByteBufs.create()
+        buf.writeString(name)
         buf.writeUuid(uuid)
         data.writePacket(buf)
         ClientPlayNetworking.send(form_statue, buf)

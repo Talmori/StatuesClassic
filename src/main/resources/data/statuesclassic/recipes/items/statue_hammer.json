@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " ib",
+    " si",
+    "s  "
+  ],
+  "key": {
+    "s": {
+      "item": "minecraft:stick"
+    },
+    "i": {
+      "tag": "c:iron_ingots"
+    },
+    "b": {
+      "tag": "minecraft:stone_tool_materials"
+    }
+  },
+  "result": {
+    "item": "statuesclassic:statue_hammer"
+  }
+}

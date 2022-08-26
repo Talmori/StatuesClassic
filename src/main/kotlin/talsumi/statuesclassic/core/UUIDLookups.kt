@@ -40,16 +40,6 @@ object UUIDLookups {
             internalLookup(server, username, whenFound, whenFailed)
             meta.timeout = time + maxFrequencyMillis
         }
-        //If the player has made a lookup recently, allow one pending lookup to be processed.
-        /*else {
-            if (!meta.hasPending) {
-                metadata[player.uuid]?.hasPending = true
-                internalLookup(server, username, whenFound = {
-                    metadata[player.uuid]?.hasPending = false
-                    whenFound.invoke(it)
-                })
-            }
-        }*/
     }
 
     private fun internalLookup(server: MinecraftServer, username: String, whenFound: (UUID) -> Unit, whenFailed: () -> Unit)
@@ -58,7 +48,7 @@ object UUIDLookups {
         if (cached != null)
             return server.execute { whenFound.invoke(cached) }
         else if (cache.containsKey(username))
-            server.execute(whenFailed)
+            return server.execute(whenFailed)
 
         executor.execute {
             server.gameProfileRepo.findProfilesByNames(arrayOf(username), Agent.MINECRAFT, object: ProfileLookupCallback {

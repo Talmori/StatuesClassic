@@ -26,6 +26,7 @@
 
 package talsumi.statuesclassic.networking
 
+import com.mojang.authlib.GameProfile
 import net.fabricmc.fabric.api.networking.v1.PacketSender
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.network.PacketByteBuf
@@ -64,12 +65,16 @@ object ServerPacketHandlers {
 
     private fun receiveFormStatuePacket(server: MinecraftServer, player: ServerPlayerEntity, handler: ServerPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
     {
+        val name = buf.readString()
         val uuid = buf.readUuid()
         val data = StatueData.fromPacket(buf)
 
+        //TODO: Move this into a frequency limited lookup system like [UUIDLookups]. Really important, makes the game hang!
+        val profile = server.sessionService.fillProfileProperties(GameProfile(uuid, null), true)
+
         server.execute {
             if (player.currentScreenHandler is StatueCreationScreenHandler)
-                (player.currentScreenHandler as StatueCreationScreenHandler).form(uuid, data)
+                (player.currentScreenHandler as StatueCreationScreenHandler).form(profile.name, uuid, data)
         }
     }
 
@@ -77,7 +82,6 @@ object ServerPacketHandlers {
     {
         val left = buf.readFloat()
         val right = buf.readFloat()
-
 
         server.execute {
             if (player.currentScreenHandler is StatueEquipmentScreenHandler)
