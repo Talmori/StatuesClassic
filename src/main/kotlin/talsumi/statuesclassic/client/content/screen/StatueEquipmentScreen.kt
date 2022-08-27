@@ -34,7 +34,6 @@ import talsumi.statuesclassic.client.content.widgets.JoystickWidget
 import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
 import talsumi.statuesclassic.networking.ClientPacketsOut
 
-//TODO: Equipment screen with preview
 class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: PlayerInventory?, title: Text?) :
     EnhancedScreen<StatueEquipmentScreenHandler>(handler, inventory, title, Identifier(StatuesClassic.MODID, "textures/gui/statue_equipment.png")) {
 

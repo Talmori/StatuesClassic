@@ -24,20 +24,19 @@
 
 package talsumi.statuesclassic.client.content.render.blockentity
 
-import com.mojang.authlib.minecraft.MinecraftProfileTexture
+import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexConsumerProvider
 import net.minecraft.client.render.block.entity.BlockEntityRenderer
 import net.minecraft.client.render.entity.EntityRendererFactory
 import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
-import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3f
 import talsumi.marderlib.util.RenderUtil
 import talsumi.statuesclassic.client.content.model.StatueModel
 import talsumi.statuesclassic.client.content.render.entity.StatuePlayerRenderer
+import talsumi.statuesclassic.client.core.ModRenderLayers
 import talsumi.statuesclassic.client.core.SkinHandler
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueData
@@ -91,7 +90,9 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
 
         val model = if (slim) slimModel else model
         val renderer = if (slim) slimStatueRenderer else statueRenderer
-        val vertex = vertexProvider.getBuffer(RenderLayer.getEntityTranslucent(texture))
+
+        val layer = ModRenderLayers.getStatueTranslucent(texture) //RenderLayer.getEntityTranslucent(texture)
+        val vertex = vertexProvider.getBuffer(layer)
 
         //Flip so we aren't upside down
         matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(180f))
@@ -105,13 +106,18 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         //Apply rotations from data. This will carry through into a PlayerEntityRenderer render call
         model.setAngles(data)
 
-        if (statue != null) {
-            //If statue BlockEntity is present, render via a PlayerEntityRenderer. This allows armor, held items, etc.
-            renderer.render(statue, tickDelta, matrices, vertex, vertexProvider, light, overlay)
-        }
-        else {
-            //If BlockEntity isn't present, render directly from a model. Used for the statue creation GUI.
-            model.render(matrices, vertex, light, overlay, 1f, 1f, 1f, 1f)
+        //Our AbstractClientPlayerEntity is a bit hacky and may not work with all mods, so don't crash if it doesn't!
+        try {
+            if (statue != null) {
+                //If statue BlockEntity is present, render via a PlayerEntityRenderer. This allows armor, held items, etc.
+                renderer.render(statue, tickDelta, matrices, vertex, vertexProvider, light, overlay)
+            }
+            else {
+                //If BlockEntity isn't present, render directly from a model. Used for the statue creation GUI.
+                model.render(matrices, vertex, light, overlay, 1f, 1f, 1f, 1f)
+            }
+        } catch (e: Exception) {
+
         }
 
         snapshot.restore()

@@ -227,7 +227,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
         DiffuseLighting.method_34742()
 
         val immediate = MinecraftClient.getInstance().bufferBuilders.entityVertexConsumers
-        RenderSystem.runAsFancy {// TODO: Slim skins
+        RenderSystem.runAsFancy {
             renderer.render(null, data, uuid, skinData?.slim ?: false, skin, delta, ourMatrix, immediate, fullbright, OverlayTexture.DEFAULT_UV)
         }
         immediate.draw()
