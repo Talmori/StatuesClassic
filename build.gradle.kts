@@ -49,3 +49,8 @@ tasks {
         withSourcesJar()
     }
 }
+configure<SourceSetContainer> {
+    named("main") {
+        java.srcDir("src/main/kotlin")
+    }
+}

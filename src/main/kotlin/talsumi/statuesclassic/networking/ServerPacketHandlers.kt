@@ -1,27 +1,25 @@
 /*
  * MIT License
  *
- *  Copyright (c) 2022 Talsumi
+ * Copyright (c) 2022 Talsumi
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is
- *  furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in all
- *  copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *  SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package talsumi.statuesclassic.networking
@@ -34,6 +32,7 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayNetworkHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.registry.Registry
+import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.content.blockentity.IUpdatableBlockEntity
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
@@ -69,12 +68,11 @@ object ServerPacketHandlers {
         val uuid = buf.readUuid()
         val data = StatueData.fromPacket(buf)
 
-        //TODO: Move this into a frequency limited lookup system like [UUIDLookups]. Really important, makes the game hang!
-        val profile = server.sessionService.fillProfileProperties(GameProfile(uuid, null), true)
-
-        server.execute {
-            if (player.currentScreenHandler is StatueCreationScreenHandler)
-                (player.currentScreenHandler as StatueCreationScreenHandler).form(profile.name, uuid, data)
+        if (UUIDLookups.rawGet(name)?.id ?: uuid == uuid) {//Sanity check to ensure username matches uuid
+            server.execute {
+                if (player.currentScreenHandler is StatueCreationScreenHandler)
+                    (player.currentScreenHandler as StatueCreationScreenHandler).form(name, uuid, data)
+            }
         }
     }
 
@@ -95,8 +93,8 @@ object ServerPacketHandlers {
 
         server.execute {
             if (player.currentScreenHandler is StatueCreationScreenHandler) {
-                UUIDLookups.lookupUuidFromClient(player, server, username, whenFound = {
-                    ServerPacketsOut.sendStatueUuidPacket(username, it, player)
+                UUIDLookups.lookupProfileFromClient(player, server, username, whenFound = {
+                    ServerPacketsOut.sendStatueProfilePacket(it, player)
                 })
             }
         }

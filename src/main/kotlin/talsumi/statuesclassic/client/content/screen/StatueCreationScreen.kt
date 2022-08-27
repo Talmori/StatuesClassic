@@ -1,31 +1,30 @@
 /*
  * MIT License
  *
- *  Copyright (c) 2022 Talsumi
+ * Copyright (c) 2022 Talsumi
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the "Software"), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is
- *  furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in all
- *  copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *  SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package talsumi.statuesclassic.client.content.screen
 
+import com.mojang.authlib.GameProfile
 import com.mojang.authlib.minecraft.MinecraftProfileTexture
 import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
@@ -49,6 +48,7 @@ import talsumi.statuesclassic.client.core.SkinHandler
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.core.StatueHelper
 import talsumi.statuesclassic.core.StatueData
+import talsumi.statuesclassic.core.UUIDLookups
 import talsumi.statuesclassic.networking.ClientPacketsOut
 import java.util.*
 
@@ -65,6 +65,11 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     private lateinit var nameField: TextFieldWidget
     private var lastName: String = ""
     private var uuid: UUID? = null
+
+    /**
+     * The actual name (case-sensitive) of the shown player.
+     */
+    private var trueName: String? = null
     private var lookupDelay = 0
     private var data = StatueData(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
     private var skin: Identifier? = null
@@ -87,17 +92,21 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
         val formButton = object: ButtonWidget(4, 184, 190, 20, 0, 208, ::form, {TranslatableText("gui.statuesclassic.sculpt")}, { uuid != null }) {
             override fun getTooltip(): List<Text>?
             {
-                return if (uuid == null) listOf(TranslatableText("gui.statuesclassic.sculpt_invalid")) else null
+                return if (infoComplete()) listOf(TranslatableText("gui.statuesclassic.sculpt_invalid")) else null
             }
         }
 
         addWidgets(joystick1, joystick2, joystick3, joystick4, joystick5, joystick6, randomizeButton, formButton)
     }
 
-    fun receiveUuid(username: String, uuid: UUID)
+    fun infoComplete(): Boolean = uuid != null && trueName != null
+
+    fun receiveProfile(profile: GameProfile)
     {
-        if (username == lastName)
-            this.uuid = uuid
+        if (profile.name.lowercase() == lastName.lowercase()) {
+            this.trueName = profile.name
+            this.uuid = profile.id
+        }
     }
 
     override fun init()
@@ -131,10 +140,10 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
     fun form()
     {
-        if (uuid == null)
+        if (uuid == null || trueName == null)
             return
 
-        ClientPacketsOut.sendFormStatuePacket(lastName, uuid!!, data)
+        ClientPacketsOut.sendFormStatuePacket(trueName!!, uuid!!, data)
     }
 
     fun randomize()
@@ -152,22 +161,25 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
             //Make sure not to spam lookup requests.
             if (lookupDelay >= 40) {
                 lookupDelay = 0
-                //This will eventually update the uuid in this screen.
+                //This will eventually update the uuid and username in this screen.
                 ClientPacketsOut.sendLookupUuidPacket(lastName)
             }
 
             //Invalidate uuid and skin when input changes
-            if (lastName != nameField.text) {
-                uuid = null
-                skin = null
-            }
+            if (lastName != nameField.text)
+                invalidateInfo()
 
             lastName = nameField.text
-            if (lastName.isEmpty()) {
-                uuid = null
-                skin = null
-            }
+            if (lastName.isEmpty())
+                invalidateInfo()
         }
+    }
+
+    private fun invalidateInfo()
+    {
+        uuid = null
+        trueName = null
+        skin = null
     }
 
     override fun render(matrices: MatrixStack, mouseX: Int, mouseY: Int, delta: Float)
@@ -196,7 +208,8 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     private fun drawModel(matrices: MatrixStack, size: Float, x: Double, y: Double, mouseX: Int, mouseY: Int, delta: Float)
     {
         //I have no idea what some of this is, it's just copied from InventoryScreen#drawEntity
-        val skin = if (uuid != null) SkinHandler.getCachedSkin(uuid!!).getSkinOrDefault() else DefaultSkinHelper.getTexture()
+        val skinData = if (uuid != null) SkinHandler.getCachedSkin(uuid!!) else null
+        val skin = skinData?.getSkinOrDefault() ?: DefaultSkinHelper.getTexture()
 
         matrices.push()
         val snapshot = RenderUtil.getSnapshot()
@@ -215,7 +228,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
         val immediate = MinecraftClient.getInstance().bufferBuilders.entityVertexConsumers
         RenderSystem.runAsFancy {// TODO: Slim skins
-            renderer.render(null, data, uuid, false, skin, delta, ourMatrix, immediate, fullbright, OverlayTexture.DEFAULT_UV)
+            renderer.render(null, data, uuid, skinData?.slim ?: false, skin, delta, ourMatrix, immediate, fullbright, OverlayTexture.DEFAULT_UV)
         }
         immediate.draw()
 
