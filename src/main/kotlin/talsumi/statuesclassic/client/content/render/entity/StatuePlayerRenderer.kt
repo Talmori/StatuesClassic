@@ -55,6 +55,7 @@ import net.minecraft.world.RaycastContext
 import talsumi.statuesclassic.client.content.model.StatueModel
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueHelper
+import java.awt.Color
 import java.util.*
 
 class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFactory.Context?, slim: Boolean) : PlayerEntityRenderer(ctx, slim) {
@@ -79,7 +80,9 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
         //    rotate += 180f
         matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rotate))
 
-        statueModel.render(matrices, vertex, light, overlay, 1f, 1f, 1f, 1f)
+        val color = Color(255, 255, 255)
+
+        statueModel.render(matrices, vertex, light, overlay, (color.red / 255f), (color.green / 255f), (color.blue / 255f), 1f)
 
         //Render features
         val player = statue.clientFakePlayer as? AbstractClientPlayerEntity ?: return

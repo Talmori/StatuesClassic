@@ -31,9 +31,15 @@ import net.minecraft.client.render.VertexFormats
 
 object ModShaders {
 
-    val noHueShader: Shader
+    var noHueShader: Shader
 
     init
+    {
+        val mc = MinecraftClient.getInstance()
+        noHueShader = Shader(mc.resourceManager, "statuesclassic_entity_translucent", VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL)
+    }
+
+    fun reload()
     {
         val mc = MinecraftClient.getInstance()
         noHueShader = Shader(mc.resourceManager, "statuesclassic_entity_translucent", VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL)

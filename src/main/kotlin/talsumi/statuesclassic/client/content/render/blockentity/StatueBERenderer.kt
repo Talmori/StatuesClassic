@@ -90,8 +90,10 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
 
         val model = if (slim) slimModel else model
         val renderer = if (slim) slimStatueRenderer else statueRenderer
+        val colorized = statue?.isColoured ?: false
 
-        val layer = ModRenderLayers.getStatueTranslucent(texture) //RenderLayer.getEntityTranslucent(texture)
+
+        val layer = if (colorized) RenderLayer.getEntityTranslucent(texture) else ModRenderLayers.getStatueTranslucent(texture) //RenderLayer.getEntityTranslucent(texture)
         val vertex = vertexProvider.getBuffer(layer)
 
         //Flip so we aren't upside down
