@@ -68,7 +68,7 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
      */
     override fun getModel(): PlayerEntityModel<AbstractClientPlayerEntity> = statueModel
 
-    fun render(statue: StatueBE, tickDelta: Float, matrices: MatrixStack, vertex: VertexConsumer, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
+    fun render(statue: StatueBE, color: Color, tickDelta: Float, matrices: MatrixStack, vertex: VertexConsumer, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
     {
         //Render the statue model.
         matrices.push()
@@ -79,8 +79,6 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
         //if (facing == Direction.NORTH || facing == Direction.SOUTH)
         //    rotate += 180f
         matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rotate))
-
-        val color = Color(255, 255, 255)
 
         statueModel.render(matrices, vertex, light, overlay, (color.red / 255f), (color.green / 255f), (color.blue / 255f), 1f)
 

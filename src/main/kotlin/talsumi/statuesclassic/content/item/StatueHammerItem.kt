@@ -36,6 +36,7 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
+import talsumi.statuesclassic.client.core.BlockColorLookups
 import talsumi.statuesclassic.client.core.ModShaders
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.core.StatueHelper
@@ -55,6 +56,8 @@ class StatueHammerItem(settings: Settings) : Item(settings) {
         val state = world.getBlockState(pos)
         val player = ctx.player ?: return ActionResult.FAIL
 
+        println(BlockColorLookups.getBlockColour(state))
+
         if (!StatueHelper.isBlockValidForStatue(world, pos))
             return ActionResult.FAIL
 
@@ -71,6 +74,8 @@ class StatueHammerItem(settings: Settings) : Item(settings) {
         return ActionResult.SUCCESS
     }
 
+    //This was used when I was developing the statue shaders. It's very useful!
+    /*
     override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack>
     {
         if (user.isSneaking && world.isClient) {
@@ -80,4 +85,5 @@ class StatueHammerItem(settings: Settings) : Item(settings) {
 
         return super.use(world, user, hand)
     }
+    */
 }

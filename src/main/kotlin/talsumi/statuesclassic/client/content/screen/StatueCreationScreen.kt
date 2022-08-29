@@ -27,6 +27,8 @@ package talsumi.statuesclassic.client.content.screen
 import com.mojang.authlib.GameProfile
 import com.mojang.authlib.minecraft.MinecraftProfileTexture
 import com.mojang.blaze3d.systems.RenderSystem
+import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.widget.TextFieldWidget
 import net.minecraft.client.render.DiffuseLighting
@@ -226,9 +228,10 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
         DiffuseLighting.method_34742()
 
+        //TODO: Block
         val immediate = MinecraftClient.getInstance().bufferBuilders.entityVertexConsumers
         RenderSystem.runAsFancy {
-            renderer.render(null, data, uuid, skinData?.slim ?: false, skin, delta, ourMatrix, immediate, fullbright, OverlayTexture.DEFAULT_UV)
+            renderer.render(null, data, Blocks.STONE.defaultState, uuid, skinData?.slim ?: false, skin, delta, ourMatrix, immediate, fullbright, OverlayTexture.DEFAULT_UV)
         }
         immediate.draw()
 

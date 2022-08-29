@@ -47,7 +47,7 @@ object UUIDLookups {
     }
 
     /**
-     * An immediate UUID lookup. [whenFound] and [whenFailed] will be called on the server thread.
+     * An immediate profile lookup. [whenFound] and [whenFailed] will be called on the server thread.
      */
     fun lookupProfileFromServer(server: MinecraftServer, username: String, whenFound: (GameProfile) -> Unit, whenFailed: (() -> Unit) = {})
     {
@@ -55,7 +55,7 @@ object UUIDLookups {
     }
 
     /**
-     * A uuid lookup with limits on frequency. [whenFound] and [whenFailed] will be called on the server thread.
+     * A profile lookup with limits on frequency. [whenFound] and [whenFailed] will be called on the server thread.
      */
     fun lookupProfileFromClient(player: ServerPlayerEntity, server: MinecraftServer, username: String, whenFound: (GameProfile) -> Unit, whenFailed: (() -> Unit) = {})
     {
@@ -78,7 +78,7 @@ object UUIDLookups {
 
     private fun internalLookup(server: MinecraftServer, username: String, whenFound: (GameProfile) -> Unit, whenFailed: () -> Unit)
     {
-        val username = username.lowercase()
+        val username = username.lowercase().take(16)
         val cached = cache[username]
         if (cached != null)
             return server.execute { whenFound.invoke(cached) }

@@ -83,7 +83,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
 
     /**
      * Note: This is an AbstractClientPlayerEntity on client.
-     * The entity is not present in the world, and should be GC'ed when this BlockEntity is.
+     * The entity is not present in the world, and *should* be GC'ed when this BlockEntity is.
      */
     var clientFakePlayer: PlayerEntity? = null
 
@@ -146,6 +146,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
     private fun onContentsChanged()
     {
         sendUpdatePacket()
+        markDirty()
     }
 
     override fun writeUpdatePacket(buf: PacketByteBuf)

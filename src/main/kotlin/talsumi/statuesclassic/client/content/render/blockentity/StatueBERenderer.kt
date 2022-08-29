@@ -24,7 +24,8 @@
 
 package talsumi.statuesclassic.client.content.render.blockentity
 
-import com.mojang.blaze3d.systems.RenderSystem
+import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexConsumerProvider
@@ -36,10 +37,12 @@ import net.minecraft.util.math.Vec3f
 import talsumi.marderlib.util.RenderUtil
 import talsumi.statuesclassic.client.content.model.StatueModel
 import talsumi.statuesclassic.client.content.render.entity.StatuePlayerRenderer
+import talsumi.statuesclassic.client.core.BlockColorLookups
 import talsumi.statuesclassic.client.core.ModRenderLayers
 import talsumi.statuesclassic.client.core.SkinHandler
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueData
+import java.awt.Color
 import java.util.*
 
 class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
@@ -83,7 +86,7 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
     /**
      * Renders a statue using [data] for rotations. [statue] may be null, in which case armour cannot be rendered
      */
-    fun render(statue: StatueBE?, data: StatueData, uuid: UUID?, slim: Boolean, texture: Identifier, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
+    fun render(statue: StatueBE?, data: StatueData, block: BlockState?, uuid: UUID?, slim: Boolean, texture: Identifier, tickDelta: Float, matrices: MatrixStack, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
     {
         matrices.push()
         val snapshot = RenderUtil.getSnapshot()
@@ -91,9 +94,12 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         val model = if (slim) slimModel else model
         val renderer = if (slim) slimStatueRenderer else statueRenderer
         val colorized = statue?.isColoured ?: false
-
-
+        val color = if (colorized) Color.WHITE else BlockColorLookups.getBlockColour(block ?: statue?.block?.defaultState ?: Blocks.STONE.defaultState)
         val layer = if (colorized) RenderLayer.getEntityTranslucent(texture) else ModRenderLayers.getStatueTranslucent(texture) //RenderLayer.getEntityTranslucent(texture)
+
+        if (statue?.playerName == "LillaTwiggy")
+            println(BlockColorLookups.getBlockColour(statue.block!!.defaultState))
+
         val vertex = vertexProvider.getBuffer(layer)
 
         //Flip so we aren't upside down
@@ -108,15 +114,16 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         //Apply rotations from data. This will carry through into a PlayerEntityRenderer render call
         model.setAngles(data)
 
+        //TODO: Render a transparent texture overlay based on base block.
         //Our AbstractClientPlayerEntity is a bit hacky and may not work with all mods, so don't crash if it doesn't!
         try {
             if (statue != null) {
                 //If statue BlockEntity is present, render via a PlayerEntityRenderer. This allows armor, held items, etc.
-                renderer.render(statue, tickDelta, matrices, vertex, vertexProvider, light, overlay)
+                renderer.render(statue, color, tickDelta, matrices, vertex, vertexProvider, light, overlay)
             }
             else {
                 //If BlockEntity isn't present, render directly from a model. Used for the statue creation GUI.
-                model.render(matrices, vertex, light, overlay, 1f, 1f, 1f, 1f)
+                model.render(matrices, vertex, light, overlay, color.red / 255f, color.green / 255f, color.blue / 255f, 1f)
             }
         } catch (e: Exception) {
 
@@ -137,7 +144,7 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
             matrices.push()
             matrices.translate(0.5, 1.5, 0.5)
 
-            render(statue, statue.data!!, statue.playerUuid!!, cache.slim!!, cache.skin!!, tickDelta, matrices, vertexProvider, light, overlay)
+            render(statue, statue.data!!, null, statue.playerUuid!!, cache.slim!!, cache.skin!!, tickDelta, matrices, vertexProvider, light, overlay)
             matrices.pop()
         }
     }

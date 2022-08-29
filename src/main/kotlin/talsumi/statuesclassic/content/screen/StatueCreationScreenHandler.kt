@@ -41,6 +41,7 @@ import talsumi.statuesclassic.core.StatueData
 import java.util.*
 
 
+//TODO: Sync parentPos to client.
 class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val hitFace: Direction?, val playerFacing: Direction?, val parentPos: BlockPos?, val world: World?) : EnhancedScreenHandler(type, syncId) {
 
     //Client Constructor
