@@ -27,6 +27,7 @@ import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder
 import net.minecraft.block.Block
 import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.client.texture.NativeImage
 import net.minecraft.item.Item
 import net.minecraft.item.ItemGroup
 import net.minecraft.item.ItemStack
@@ -40,8 +41,8 @@ import talsumi.statuesclassic.content.ModBlocks
 import talsumi.statuesclassic.content.ModItems
 import talsumi.statuesclassic.content.ModScreenHandlers
 import talsumi.statuesclassic.networking.ServerPacketHandlers
+import java.nio.ByteBuffer
 
-//TODO: Recipes
 //TODO: Click with glowstone to make statues illuminate, gunpowder to remove lighting, palette to colourize and paper to display nametag (Shouldn't be visible through walls)
 @Suppress("UNUSED")
 object StatuesClassic: ModInitializer {

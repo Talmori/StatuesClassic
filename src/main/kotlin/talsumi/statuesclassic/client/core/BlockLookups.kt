@@ -24,22 +24,17 @@
 
 package talsumi.statuesclassic.client.core
 
-import com.mojang.blaze3d.platform.GlStateManager
-import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.MinecraftClient
 import net.minecraft.util.Identifier
-import org.lwjgl.BufferUtils
-import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL12
 import java.awt.Color
 import javax.imageio.ImageIO
 
-object BlockColorLookups {
+object BlockLookups {
 
-    private val cache = HashMap<BlockState, Color>()
+    private val cache = HashMap<BlockState, Data>()
 
-    fun getBlockColour(block: BlockState): Color
+    fun getBlockColour(block: BlockState): Data
     {
         if (cache.containsKey(block)) {
             return cache[block]!!
@@ -70,10 +65,13 @@ object BlockColorLookups {
                     blues += col.blue
                 }
 
-                val color = Color(reds / pixelCount, greens / pixelCount, blues / pixelCount)
-                cache[block] = color
-                return color
+                val data = Data(Color(reds / pixelCount, greens / pixelCount, blues / pixelCount),
+                    Identifier(sprite.id.namespace, "textures/${sprite.id.path}.png"))
+                cache[block] = data
+                return data
             }
         }
     }
+
+    class Data(val color: Color, val texture: Identifier)
 }

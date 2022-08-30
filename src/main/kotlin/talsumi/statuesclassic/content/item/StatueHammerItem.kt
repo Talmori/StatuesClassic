@@ -24,6 +24,7 @@
 
 package talsumi.statuesclassic.content.item
 
+import net.minecraft.block.Blocks
 import net.minecraft.client.item.TooltipContext
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
@@ -36,10 +37,13 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
-import talsumi.statuesclassic.client.core.BlockColorLookups
-import talsumi.statuesclassic.client.core.ModShaders
+import talsumi.statuesclassic.client.content.render.entity.StatuePlayerRenderer
+import talsumi.statuesclassic.client.core.BlockLookups
+import talsumi.statuesclassic.client.core.SkinHandler
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.core.StatueHelper
+import talsumi.statuesclassic.core.UUIDLookups
+import java.util.*
 
 class StatueHammerItem(settings: Settings) : Item(settings) {
 
@@ -55,8 +59,6 @@ class StatueHammerItem(settings: Settings) : Item(settings) {
         val pos = ctx.blockPos
         val state = world.getBlockState(pos)
         val player = ctx.player ?: return ActionResult.FAIL
-
-        println(BlockColorLookups.getBlockColour(state))
 
         if (!StatueHelper.isBlockValidForStatue(world, pos))
             return ActionResult.FAIL
@@ -74,16 +76,16 @@ class StatueHammerItem(settings: Settings) : Item(settings) {
         return ActionResult.SUCCESS
     }
 
-    //This was used when I was developing the statue shaders. It's very useful!
     /*
+
     override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack>
     {
         if (user.isSneaking && world.isClient) {
-            ModShaders.reload()
+            StatuePlayerRenderer.flag = true
             user.sendMessage(Text.of("Reloaded mod shaders!"), false)
         }
 
         return super.use(world, user, hand)
-    }
-    */
+    }*/
+
 }

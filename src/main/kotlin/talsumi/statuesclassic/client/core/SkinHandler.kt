@@ -27,15 +27,122 @@ package talsumi.statuesclassic.client.core
 import com.mojang.authlib.GameProfile
 import com.mojang.authlib.minecraft.MinecraftProfileTexture
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type
+import net.minecraft.block.BlockState
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.texture.NativeImage
+import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.DefaultSkinHelper
 import net.minecraft.util.Identifier
+import org.lwjgl.BufferUtils
+import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL12
+import java.awt.Color
+import java.io.InputStream
 import java.util.*
+import javax.imageio.ImageIO
+import kotlin.collections.HashMap
 
 object SkinHandler {
 
     private val cache = HashMap<UUID, SkinData>()
+    private val texturedCache = HashMap<Pair<UUID, BlockState>, Identifier>()
 
+    fun getTexturedSkin(uuid: UUID, block: BlockState): Identifier?
+    {
+        val key = Pair(uuid, block)
+        if (!texturedCache.containsKey(key)) {
+            val skin = makeTexturedSkin(uuid, block)
+            if (skin != null)
+                texturedCache[key] = skin
+            return skin
+        }
+        else {
+            return texturedCache[key]!!
+        }
+    }
+
+    private fun makeTexturedSkin(uuid: UUID, block: BlockState): Identifier?
+    {
+        val baseSkin = getCachedSkin(uuid)?.skin ?: return null
+
+        val mc = MinecraftClient.getInstance()
+        val textures = mc.textureManager
+
+        val pixelsBuffer = BufferUtils.createIntBuffer(64 * 64)
+        textures.getTexture(baseSkin).bindTexture()
+        GL12.glGetTexImage(GL11.GL_TEXTURE_2D, 0, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, pixelsBuffer)
+
+        var width: Int
+        var height: Int
+        val blockImage = streamBlockTexture(block).use { ImageIO.read(it) }.let {
+            width = it.width
+            height = it.height
+            it.getRGB(0, 0, it.width, it.height, null, 0, it.width * it.height)}
+        val image: Array<Int> = Array(64 * 64) { 0 }
+
+        val pixels = IntArray(64 * 64)
+        pixelsBuffer.get(pixels)
+
+        for (rgba in pixels.withIndex()) {
+            val x = rgba.index / 64
+            val y = 63 - (rgba.index % 64)
+            val blockY = y % 16
+            val blockX = x % 16
+            val blockIndex = blockY * width + blockX
+
+            val skinPixel = Color(rgba.value)
+            image[x + (y * 64)] =
+                if (skinPixel.alpha > 0)
+                mixColors(skinPixel, Color(blockImage[blockIndex]))
+                else rgba.value
+        }
+
+        val stream = object: InputStream() {
+            var pos = 0
+            var bytes = Array<Byte>(4) { 0 }
+            var lastByte = 0
+
+            override fun read(): Int
+            {
+                if (pos >= image.size)
+                    return -1
+
+                if (lastByte < 0) {
+                    val int = image[pos++]
+                    bytes[3] = (int shr 0).toByte()
+                    bytes[2] = (int shr 8).toByte()
+                    bytes[1] = (int shr 16).toByte()
+                    bytes[0] = (int shr 24).toByte()
+                    lastByte = 3
+                }
+
+                return bytes[lastByte--].toInt()
+            }
+        }
+
+        //TODO: Image doesn't render
+        val combinedImage = NativeImage(64, 64, true)
+        stream.read(combinedImage.bytes)
+        return textures.registerDynamicTexture("statuesclassic_${uuid}_${UUID.randomUUID()}".lowercase(), NativeImageBackedTexture(combinedImage))
+    }
+
+    private fun mixColors(skin: Color, block: Color): Int
+    {
+        val skinHSV = Color.RGBtoHSB(skin.red, skin.green, skin.blue, null)
+        val blockHSV = Color.RGBtoHSB(block.red, block.green, block.blue, null)
+        return Color.HSBtoRGB((skinHSV[0] + blockHSV[0]) / 256f, skinHSV[1], (skinHSV[2] + blockHSV[2]) / 256f)
+    }
+
+    private fun streamBlockTexture(block: BlockState): InputStream?
+    {
+        val mc = MinecraftClient.getInstance()
+        val sprite = mc.blockRenderManager.getModel(block).particleSprite
+        return try {
+            mc.resourceManager.getResource(Identifier(sprite.id.namespace, "textures/${sprite.id.path}.png")).inputStream
+        } catch (e: Exception) {
+            null
+        }
+    }
     /**
      * Call to get a [SkinData] object. Its values will be null until they have been loaded by the game.
      */

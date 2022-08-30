@@ -75,6 +75,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     private var lookupDelay = 0
     private var data = StatueData(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
     private var skin: Identifier? = null
+    private var block: BlockState
 
     private val renderer = StatueBERenderer()
 
@@ -99,6 +100,8 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
         }
 
         addWidgets(joystick1, joystick2, joystick3, joystick4, joystick5, joystick6, randomizeButton, formButton)
+
+        block = MinecraftClient.getInstance().world?.getBlockState(handler.parentPos) ?: Blocks.STONE.defaultState
     }
 
     fun infoComplete(): Boolean = uuid != null && trueName != null
@@ -228,10 +231,9 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
         DiffuseLighting.method_34742()
 
-        //TODO: Block
         val immediate = MinecraftClient.getInstance().bufferBuilders.entityVertexConsumers
         RenderSystem.runAsFancy {
-            renderer.render(null, data, Blocks.STONE.defaultState, uuid, skinData?.slim ?: false, skin, delta, ourMatrix, immediate, fullbright, OverlayTexture.DEFAULT_UV)
+            renderer.render(null, data, block, uuid, skinData?.slim ?: false, skin, delta, ourMatrix, immediate, fullbright, OverlayTexture.DEFAULT_UV)
         }
         immediate.draw()
 

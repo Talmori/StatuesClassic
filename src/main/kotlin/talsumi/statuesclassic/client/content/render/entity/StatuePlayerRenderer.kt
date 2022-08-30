@@ -53,6 +53,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3f
 import net.minecraft.world.RaycastContext
 import talsumi.statuesclassic.client.content.model.StatueModel
+import talsumi.statuesclassic.client.core.SkinHandler
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueHelper
 import java.awt.Color
@@ -80,7 +81,7 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
         //    rotate += 180f
         matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rotate))
 
-        statueModel.render(matrices, vertex, light, overlay, (color.red / 255f), (color.green / 255f), (color.blue / 255f), 1f)
+        statueModel.render(matrices, vertex, light, overlay, (color.red / 255f), (color.green / 255f), (color.blue / 255f), color.alpha / 255f)
 
         //Render features
         val player = statue.clientFakePlayer as? AbstractClientPlayerEntity ?: return

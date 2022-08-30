@@ -24,11 +24,14 @@
 
 package talsumi.statuesclassic.content.screen
 
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.NamedScreenHandlerFactory
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerType
+import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.math.BlockPos
@@ -40,15 +43,13 @@ import talsumi.statuesclassic.core.StatueHelper
 import talsumi.statuesclassic.core.StatueData
 import java.util.*
 
-
-//TODO: Sync parentPos to client.
-class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val hitFace: Direction?, val playerFacing: Direction?, val parentPos: BlockPos?, val world: World?) : EnhancedScreenHandler(type, syncId) {
+class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val hitFace: Direction?, val playerFacing: Direction?, val parentPos: BlockPos, val world: World?) : EnhancedScreenHandler(type, syncId) {
 
     //Client Constructor
-    constructor(syncId: Int, inv: PlayerInventory) : this(syncId, null, null, null, null)
+    constructor(syncId: Int, inv: PlayerInventory, buf: PacketByteBuf) : this(syncId, null, null, buf.readBlockPos(), null)
 
     //Common Constructor
-    constructor(syncId: Int, hitFace: Direction?, playerFacing: Direction?, parentPos: BlockPos?, world: World?) : this(
+    constructor(syncId: Int, hitFace: Direction?, playerFacing: Direction?, parentPos: BlockPos, world: World?) : this(
         ModScreenHandlers.statue_creation_screen,
         syncId,
         hitFace,
@@ -65,7 +66,7 @@ class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val 
 
     fun form(name: String, uuid: UUID, data: StatueData)
     {
-        if (parentPos != null && world != null) {
+        if (world != null) {
             val direction = if (hitFace == Direction.UP || hitFace == Direction.DOWN) playerFacing!!.opposite else hitFace!!.opposite
             StatueHelper.tryCreateStatue(parentPos!!, world!!, name, uuid, data, direction)
         }
@@ -79,15 +80,18 @@ class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val 
     }
 
     companion object {
-        fun makeFactory(player: PlayerEntity, hitFace: Direction, pos: BlockPos, world: World): NamedScreenHandlerFactory
+        fun makeFactory(player: PlayerEntity, hitFace: Direction, pos: BlockPos, world: World): ExtendedScreenHandlerFactory
         {
-            return object: NamedScreenHandlerFactory {
+            return object: ExtendedScreenHandlerFactory {
                 override fun createMenu(syncId: Int, inv: PlayerInventory, player: PlayerEntity): ScreenHandler?
                 {
                     return StatueCreationScreenHandler(syncId, player.horizontalFacing, hitFace, pos, world)
                 }
                 override fun getDisplayName(): Text {
                     return TranslatableText("")
+                }
+                override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+                    buf.writeBlockPos(pos)
                 }
             }
         }

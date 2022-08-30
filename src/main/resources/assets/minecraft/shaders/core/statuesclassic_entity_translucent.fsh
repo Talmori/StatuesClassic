@@ -41,8 +41,9 @@ void main() {
     if (color.a < 0.1) {
         discard;
     }
-    color.rgb = mix(overlayColor.rgb, color.rgb, overlayColor.a);
     float alpha = color.a;
+    color.rgb = mix(overlayColor.rgb, color.rgb, overlayColor.a);
+
 
     vec3 hsv = toHSV(color.rgb);
     float sat = hsv.y;
