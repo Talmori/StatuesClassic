@@ -124,11 +124,9 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         val renderer = if (slim) slimStatueRenderer else statueRenderer
         val colorized = statue?.isColoured ?: false
         val blockData = BlockLookups.getBlockColour(block)
-
-        //val texture = uuid?.let { SkinHandler.getTexturedSkin(uuid, block) } ?: texture
-
-        val color = if (colorized) Color.WHITE else blockData.color
-        val layer = if (colorized) RenderLayer.getEntityTranslucent(texture) else ModRenderLayers.getStatueTranslucent(texture) //RenderLayer.getEntityTranslucent(texture)
+        val texture = (if (!colorized) uuid?.let { SkinHandler.getTexturedSkin(uuid, block) } else null) ?: texture
+        val color = Color.WHITE//if (colorized) Color.WHITE else blockData.color
+        val layer = RenderLayer.getEntityTranslucent(texture)//if (colorized) RenderLayer.getEntityTranslucent(texture) else ModRenderLayers.getStatueTranslucent(texture) //RenderLayer.getEntityTranslucent(texture)
         val vertex = vertexProvider.getBuffer(layer)
 
         //Render statue

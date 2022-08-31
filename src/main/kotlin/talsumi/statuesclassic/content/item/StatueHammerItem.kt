@@ -76,16 +76,13 @@ class StatueHammerItem(settings: Settings) : Item(settings) {
         return ActionResult.SUCCESS
     }
 
-    /*
-
     override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack>
     {
         if (user.isSneaking && world.isClient) {
-            StatuePlayerRenderer.flag = true
-            user.sendMessage(Text.of("Reloaded mod shaders!"), false)
+            SkinHandler.reset()
         }
 
         return super.use(world, user, hand)
-    }*/
+    }
 
 }
