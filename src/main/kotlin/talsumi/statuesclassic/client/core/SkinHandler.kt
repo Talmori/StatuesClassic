@@ -45,7 +45,7 @@ import kotlin.collections.HashMap
 object SkinHandler {
 
     private val cache = HashMap<UUID, SkinData>()
-    private val texturedCache = HashMap<Pair<UUID, BlockState>, Identifier>()
+    private val texturedCache = HashMap<Pair<UUID?, BlockState>, Identifier>()
 
     fun reset()
     {
@@ -53,7 +53,10 @@ object SkinHandler {
         cache.clear()
     }
 
-    fun getTexturedSkin(uuid: UUID, block: BlockState): Identifier?
+    /**
+     * Creates and returns a skin for [uuid], textured to look like [block]. This will return null until the skin has been created.
+     */
+    fun getTexturedSkin(uuid: UUID?, block: BlockState): Identifier?
     {
         val key = Pair(uuid, block)
         if (!texturedCache.containsKey(key)) {
@@ -67,10 +70,10 @@ object SkinHandler {
         }
     }
 
-    private fun makeTexturedSkin(uuid: UUID, block: BlockState): Identifier?
+    private fun makeTexturedSkin(uuid: UUID?, block: BlockState): Identifier?
     {
         val sTime = System.currentTimeMillis()
-        val baseSkin = getCachedSkin(uuid)?.skin ?: return null
+        val baseSkin = (if (uuid != null) getCachedSkin(uuid)?.skin else DefaultSkinHelper.getTexture()) ?: return null
 
         val mc = MinecraftClient.getInstance()
         val textures = mc.textureManager
@@ -81,7 +84,7 @@ object SkinHandler {
         val blockImage = streamBlockTexture(block).use { ImageIO.read(it) }.let {
             width = it.width
             height = it.height
-            it.getRGB(0, 0, it.width, it.height, null, 0, it.width * it.height)}
+            it.getRGB(0, 0, it.width, it.height, null, 0, it.width.coerceAtLeast(it.height))}
 
         //Read in skin texture
         textures.getTexture(baseSkin).bindTexture()
@@ -92,57 +95,33 @@ object SkinHandler {
 
         val newImage = NativeImage(64, 64, true)
 
-        for (bgra in skinPixels.withIndex()) {
-            val x = (bgra.index % 64)
-            val y = (bgra.index / 64)
-            val blockY = y % 16
-            val blockX = x % 16
+        val skinArray = FloatArray(3)
+        val blockArray = FloatArray(3)
+
+        for (rgba in skinPixels.withIndex()) {
+            val x = (rgba.index % 64)
+            val y = (rgba.index / 64)
+            val blockX = (x % 16) * (width / 16)
+            val blockY = (y % 16) * (height / 16)
             val blockIndex = (blockY * width) + blockX
 
-            val skinPixel = Color(bgra.value, true).let {
-                Color(it.red, it.green, it.blue, it.alpha)
-            }
-
-            Color(blockImage[blockIndex]).let {
-                newImage.setColor(x, y, mixColors(skinPixel, it))
-            }
+            newImage.setColor(x, y, mixColors(rgba.value, blockImage[blockIndex], skinArray, blockArray))
         }
-
-        /*val stream = object: InputStream() {
-            var pos = 0
-            var bytes = Array<Byte>(4) { 0 }
-            var lastByte = 0
-
-            override fun read(): Int
-            {
-                if (pos >= newTexturePixels.size)
-                    return -1
-
-                if (lastByte < 0) {
-                    val int = newTexturePixels[pos++]
-                    bytes[3] = (int shr 0).toByte()
-                    bytes[2] = (int shr 8).toByte()
-                    bytes[1] = (int shr 16).toByte()
-                    bytes[0] = (int shr 24).toByte()
-                    lastByte = 3
-                }
-
-                return bytes[lastByte--].toInt()
-            }
-        }*/
 
         val eTime = System.currentTimeMillis()
         return textures.registerDynamicTexture("statuesclassic_${uuid}_${UUID.randomUUID()}".lowercase(), NativeImageBackedTexture(newImage))
     }
 
-    //TODO: This
-    private fun mixColors(skin: Color, block: Color): Int
+    /**
+     * Mixes two skin and block pixels.
+     * [skinArray] and [blockArray] are used to store intermediate values in. They can be omitted.
+     */
+    private fun mixColors(skin: Int, block: Int, skinArray: FloatArray?, blockArray: FloatArray?): Int
     {
-        return skin.rgb
-
-        val skinHSV = Color.RGBtoHSB(skin.red, skin.green, skin.blue, null)
-        val blockHSV = Color.RGBtoHSB(block.red, block.green, block.blue, null)
-        val out = Color(Color.HSBtoRGB((skinHSV[0] + blockHSV[0]) / 512f, skinHSV[1], (skinHSV[2] + blockHSV[2]) / 512f))
+        val skinHSV = Color.RGBtoHSB(skin and 0x00FF0000 shr 16, skin and 0x0000FF00 shr 8, skin and 0x00000000FF, skinArray)
+        val blockHSV = Color.RGBtoHSB(block and 0x000000FF, block and 0x0000FF00 shr 8, block and 0x00FF0000 shr 16, blockArray)
+        val out = Color.HSBtoRGB(blockHSV[0], blockHSV[1], (blockHSV[2] + skinHSV[2]) / 2f)
+        return (out and 0x00FFFFFF) or (skin and 0xFF000000.toInt())
     }
 
     private fun streamBlockTexture(block: BlockState): InputStream?

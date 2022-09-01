@@ -24,9 +24,7 @@
 
 package talsumi.statuesclassic.content.item
 
-import net.minecraft.block.Blocks
 import net.minecraft.client.item.TooltipContext
-import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.ItemUsageContext
@@ -34,16 +32,9 @@ import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
-import net.minecraft.util.Hand
-import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
-import talsumi.statuesclassic.client.content.render.entity.StatuePlayerRenderer
-import talsumi.statuesclassic.client.core.BlockLookups
-import talsumi.statuesclassic.client.core.SkinHandler
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.core.StatueHelper
-import talsumi.statuesclassic.core.UUIDLookups
-import java.util.*
 
 class StatueHammerItem(settings: Settings) : Item(settings) {
 
@@ -75,14 +66,4 @@ class StatueHammerItem(settings: Settings) : Item(settings) {
 
         return ActionResult.SUCCESS
     }
-
-    override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack>
-    {
-        if (user.isSneaking && world.isClient) {
-            SkinHandler.reset()
-        }
-
-        return super.use(world, user, hand)
-    }
-
 }

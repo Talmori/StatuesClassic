@@ -42,7 +42,6 @@ object StatuesClassicClient: ClientModInitializer {
     {
         ClientPacketHandlers.register()
         ModClientScreens.wake()
-        ClientBlockEntityEvents.BLOCK_ENTITY_LOAD.register(ClientEventHandlers::onBlockEntityLoad)
         BlockEntityRendererRegistry.register(ModBlockEntities.statue) { StatueBERenderer() }
         registerBlockRenderLayers()
     }

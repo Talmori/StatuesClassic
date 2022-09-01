@@ -26,14 +26,8 @@ package talsumi.statuesclassic.client.events
 
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.client.world.ClientWorld
-import talsumi.statuesclassic.content.blockentity.IUpdatableBlockEntity
 import talsumi.statuesclassic.networking.ClientPacketsOut
 
 object ClientEventHandlers {
 
-    fun onBlockEntityLoad(be: BlockEntity, world: ClientWorld)
-    {
-        if (be is IUpdatableBlockEntity)
-            ClientPacketsOut.sendRequestBlockEntityUpdate(be)
-    }
 }

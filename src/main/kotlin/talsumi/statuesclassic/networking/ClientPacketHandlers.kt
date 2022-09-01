@@ -32,30 +32,12 @@ import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.registry.Registry
 import talsumi.statuesclassic.client.content.screen.StatueCreationScreen
-import talsumi.statuesclassic.content.blockentity.IUpdatableBlockEntity
 
 object ClientPacketHandlers {
 
     fun register()
     {
-        ClientPlayNetworking.registerGlobalReceiver(ServerPacketsOut.update_block_entity, ::receiveUpdateBlockEntityPacket)
         ClientPlayNetworking.registerGlobalReceiver(ServerPacketsOut.send_statue_uuid, ::receiveStatueProfilePacket)
-    }
-
-    fun receiveUpdateBlockEntityPacket(client: MinecraftClient, handler: ClientPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
-    {
-        val pos = buf.readBlockPos()
-        val type = buf.readIdentifier()
-
-        buf.retain()
-        client.execute {
-            val be = client.world?.getBlockEntity(pos, Registry.BLOCK_ENTITY_TYPE.get(type))?.orElse(null) ?: return@execute
-
-            if (be is IUpdatableBlockEntity)
-                be.receiveUpdatePacket(buf)
-
-            buf.release()
-        }
     }
 
     fun receiveStatueProfilePacket(client: MinecraftClient, handler: ClientPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)

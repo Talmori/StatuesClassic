@@ -104,33 +104,5 @@ object UUIDLookups {
         }
     }
 
-    /*
-        private fun internalLookup(server: MinecraftServer, username: String, whenFound: (UUID) -> Unit, whenFailed: () -> Unit)
-    {
-        val cached = cache[username]
-        if (cached != null)
-            return server.execute { whenFound.invoke(cached) }
-        else if (cache.containsKey(username))
-            return server.execute(whenFailed)
-
-        executor.execute {
-            server.gameProfileRepo.findProfilesByNames(arrayOf(username), Agent.MINECRAFT, object: ProfileLookupCallback {
-                override fun onProfileLookupSucceeded(profile: GameProfile) {
-                    cache[username] = profile.id
-                    server.execute {
-                        whenFound.invoke(profile?.id)
-                    }
-                }
-
-                override fun onProfileLookupFailed(profile: GameProfile?, exception: Exception?)
-                {
-                    cache[username] = null
-                    server.execute(whenFailed)
-                }
-            })
-        }
-    }
-     */
-
     class Metadata(var timeout: Long, var hasPending: Boolean)
 }

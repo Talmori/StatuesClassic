@@ -49,14 +49,7 @@ class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val 
     constructor(syncId: Int, inv: PlayerInventory, buf: PacketByteBuf) : this(syncId, null, null, buf.readBlockPos(), null)
 
     //Common Constructor
-    constructor(syncId: Int, hitFace: Direction?, playerFacing: Direction?, parentPos: BlockPos, world: World?) : this(
-        ModScreenHandlers.statue_creation_screen,
-        syncId,
-        hitFace,
-        playerFacing,
-        parentPos,
-        world
-    ) {
+    constructor(syncId: Int, hitFace: Direction?, playerFacing: Direction?, parentPos: BlockPos, world: World?) : this(ModScreenHandlers.statue_creation_screen, syncId, hitFace, playerFacing, parentPos, world) {
         setup()
     }
 

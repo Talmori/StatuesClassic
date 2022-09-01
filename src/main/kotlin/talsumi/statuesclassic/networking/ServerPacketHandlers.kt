@@ -24,7 +24,6 @@
 
 package talsumi.statuesclassic.networking
 
-import com.mojang.authlib.GameProfile
 import net.fabricmc.fabric.api.networking.v1.PacketSender
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.network.PacketByteBuf
@@ -32,8 +31,6 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayNetworkHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.registry.Registry
-import talsumi.statuesclassic.StatuesClassic
-import talsumi.statuesclassic.content.blockentity.IUpdatableBlockEntity
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
 import talsumi.statuesclassic.core.StatueData
@@ -43,23 +40,9 @@ object ServerPacketHandlers {
 
     fun register()
     {
-        ServerPlayNetworking.registerGlobalReceiver(ClientPacketsOut.request_block_entity_update, ::receiveRequestBlockEntityUpdatePacket)
         ServerPlayNetworking.registerGlobalReceiver(ClientPacketsOut.form_statue, ::receiveFormStatuePacket)
         ServerPlayNetworking.registerGlobalReceiver(ClientPacketsOut.update_statue_hands, ::receiveUpdateStatueHandsPacket)
         ServerPlayNetworking.registerGlobalReceiver(ClientPacketsOut.lookup_uuid, ::receiveLookupUuidPacket)
-    }
-
-    private fun receiveRequestBlockEntityUpdatePacket(server: MinecraftServer, player: ServerPlayerEntity, handler: ServerPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
-    {
-        val pos = buf.readBlockPos()
-        val type = Registry.BLOCK_ENTITY_TYPE.get(buf.readIdentifier())
-
-        server.execute {
-            val be = player.world.getBlockEntity(pos, type).orElse(null) ?: return@execute
-
-            if (be is IUpdatableBlockEntity)
-                ServerPacketsOut.sendUpdateBlockEntityPacket(be, player)
-        }
     }
 
     private fun receiveFormStatuePacket(server: MinecraftServer, player: ServerPlayerEntity, handler: ServerPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)

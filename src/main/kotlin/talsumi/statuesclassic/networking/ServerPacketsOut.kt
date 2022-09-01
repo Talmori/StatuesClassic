@@ -32,22 +32,12 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Identifier
 import net.minecraft.util.registry.Registry
 import talsumi.statuesclassic.StatuesClassic
-import talsumi.statuesclassic.content.blockentity.IUpdatableBlockEntity
 import java.util.*
 
 object ServerPacketsOut {
 
     val update_block_entity = Identifier(StatuesClassic.MODID, "update_block_entity")
     val send_statue_uuid = Identifier(StatuesClassic.MODID, "send_statue_uuid")
-
-    fun <T> sendUpdateBlockEntityPacket(be: T, player: ServerPlayerEntity) where T: IUpdatableBlockEntity, T: BlockEntity
-    {
-        val buf = PacketByteBufs.create()
-        buf.writeBlockPos(be.pos)
-        buf.writeIdentifier(Registry.BLOCK_ENTITY_TYPE.getId(be.type))
-        be.writeUpdatePacket(buf)
-        ServerPlayNetworking.send(player, update_block_entity, buf)
-    }
 
     fun sendStatueProfilePacket(profile: GameProfile, player: ServerPlayerEntity)
     {

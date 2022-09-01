@@ -77,8 +77,6 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
         //Rotate to match statue facing
         val facing = statue.cachedState.get(Properties.HORIZONTAL_FACING)
         var rotate = facing.asRotation()
-        //if (facing == Direction.NORTH || facing == Direction.SOUTH)
-        //    rotate += 180f
         matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rotate))
 
         statueModel.render(matrices, vertex, light, overlay, (color.red / 255f), (color.green / 255f), (color.blue / 255f), color.alpha / 255f)
