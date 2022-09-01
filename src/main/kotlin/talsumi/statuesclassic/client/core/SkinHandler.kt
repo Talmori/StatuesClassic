@@ -34,7 +34,6 @@ import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.DefaultSkinHelper
 import net.minecraft.util.Identifier
 import org.lwjgl.BufferUtils
-import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL12
 import java.awt.Color
 import java.io.InputStream
@@ -98,6 +97,7 @@ object SkinHandler {
         val skinArray = FloatArray(3)
         val blockArray = FloatArray(3)
 
+        //Calculate the new colour of each pixel
         for (rgba in skinPixels.withIndex()) {
             val x = (rgba.index % 64)
             val y = (rgba.index / 64)
@@ -112,15 +112,21 @@ object SkinHandler {
         return textures.registerDynamicTexture("statuesclassic_${uuid}_${UUID.randomUUID()}".lowercase(), NativeImageBackedTexture(newImage))
     }
 
+    //TODO: Tweak this to make skin pixels less faded.
     /**
      * Mixes two skin and block pixels.
      * [skinArray] and [blockArray] are used to store intermediate values in. They can be omitted.
      */
-    private fun mixColors(skin: Int, block: Int, skinArray: FloatArray?, blockArray: FloatArray?): Int
+    private fun mixColors(skin: Int, block: Int, skinArray: FloatArray? = null, blockArray: FloatArray? = null): Int
     {
         val skinHSV = Color.RGBtoHSB(skin and 0x00FF0000 shr 16, skin and 0x0000FF00 shr 8, skin and 0x00000000FF, skinArray)
         val blockHSV = Color.RGBtoHSB(block and 0x000000FF, block and 0x0000FF00 shr 8, block and 0x00FF0000 shr 16, blockArray)
-        val out = Color.HSBtoRGB(blockHSV[0], blockHSV[1], (blockHSV[2] + skinHSV[2]) / 2f)
+        var sV = (blockHSV[2] + skinHSV[2] + skinHSV[2]) / 3f //Try: blockHSV[2] + skinHSV[2] + skinHSV[2] / 3f
+        var bV = blockHSV[2]
+        if (sV > bV)
+            sV -= (sV-bV) / 2f
+
+        val out = Color.HSBtoRGB(blockHSV[0], blockHSV[1], sV)
         return (out and 0x00FFFFFF) or (skin and 0xFF000000.toInt())
     }
 
@@ -183,7 +189,7 @@ object SkinHandler {
         /**
          * Returns the held skin, or if it hasn't been loaded yet, the default one.
          */
-        fun getSkinOrDefault(): Identifier = skin ?:DefaultSkinHelper.getTexture()
+        fun getSkinOrDefault(): Identifier = skin ?: DefaultSkinHelper.getTexture()
 
         override fun toString(): String = "SkinData(skin=$skin, cape=$cape, elytra=$elytra, slim=$slim)"
     }

@@ -44,7 +44,6 @@ void main() {
     float alpha = color.a;
     color.rgb = mix(overlayColor.rgb, color.rgb, overlayColor.a);
 
-
     vec3 hsv = toHSV(color.rgb);
     float sat = hsv.y;
     float value = hsv.z;

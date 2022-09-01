@@ -65,7 +65,7 @@ class StatueParentBlock(settings: Settings) : AbstractStatueBlock(settings), Blo
         if (world.isClient) return ActionResult.SUCCESS
 
         if (be is StatueBE)
-            if (!be.onRightClicked(player, hand, player.getStackInHand(hand)))
+            if (!be.onRightClicked(player, hand, player.getStackInHand(hand), player.isSneaking))
                 player.openHandledScreen(StatueEquipmentScreenHandler.makeFactory(be))
 
         return ActionResult.SUCCESS

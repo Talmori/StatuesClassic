@@ -96,11 +96,12 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         clientFakePlayer?.tick()
     }*/
 
+    //TODO: This could do with a cleanup
     /**
      * Called when either of the statue's blocks is activated with an item.
      * Returns true if further processing is to be skipped.
      */
-    fun onRightClicked(player: PlayerEntity, hand: Hand, item: ItemStack): Boolean
+    fun onRightClicked(player: PlayerEntity, hand: Hand, item: ItemStack, sneaking: Boolean): Boolean
     {
         val override = when (item.item) {
             Items.LEATHER -> { hasCape = !hasCape; if (hasCape) item.decrement(1) else ItemStackUtil.dropStack(world!!, player.pos, Items.LEATHER.defaultStack); true }

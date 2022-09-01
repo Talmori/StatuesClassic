@@ -31,6 +31,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.Waterloggable
 import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.FluidState
+import net.minecraft.fluid.Fluids
 import net.minecraft.item.ItemStack
 import net.minecraft.sound.SoundEvent
 import net.minecraft.state.StateManager
@@ -53,6 +54,14 @@ abstract class AbstractStatueBlock(settings: Settings) : Block(settings), Waterl
     init
     {
         defaultState = defaultState.with(lightLevel, 0).with(Properties.WATERLOGGED, false)
+    }
+
+    override fun getFluidState(state: BlockState): FluidState = if (state.get(Properties.WATERLOGGED)) Fluids.WATER.getStill(false) else super.getFluidState(state)
+    override fun getStateForNeighborUpdate(state: BlockState, direction: Direction, neighborState: BlockState, world: WorldAccess, pos: BlockPos, neighborPos: BlockPos): BlockState
+    {
+        if (state.get(Properties.WATERLOGGED))
+            world.createAndScheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
     }
 
     override fun isTranslucent(state: BlockState?, world: BlockView?, pos: BlockPos?): Boolean = true
