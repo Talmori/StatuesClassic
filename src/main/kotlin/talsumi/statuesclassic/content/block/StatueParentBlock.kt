@@ -53,7 +53,7 @@ class StatueParentBlock(settings: Settings) : AbstractStatueBlock(settings), Blo
     override fun neighborUpdate(state: BlockState, world: World, pos: BlockPos, block: Block, fromPos: BlockPos, notify: Boolean)
     {
         if (world.getBlockState(pos.up()).block !is StatueChildBlock)
-            world.removeBlock(pos, false)
+            replace(world, pos.up(), pos)
 
         super.neighborUpdate(state, world, pos, block, fromPos, notify)
     }
@@ -75,7 +75,7 @@ class StatueParentBlock(settings: Settings) : AbstractStatueBlock(settings), Blo
     {
         if (!state.isOf(newState.block)) {
             if (world.getBlockState(pos.up()).block is StatueChildBlock)
-                world.removeBlock(pos.up(), false)
+                replace(world, pos, pos.up())
         }
 
         super.onStateReplaced(state, world, pos, newState, moved)

@@ -63,8 +63,10 @@ class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: Pl
 
     fun joysticksUpdatedFromServer(left: Float, right: Float)
     {
-        leftJoystick.stickX = left.coerceIn(-1f, 1f)
-        rightJoystick.stickX = right.coerceIn(-1f, 1f)
+        println(left)
+        println(right)
+        leftJoystick.setPosition(left.coerceIn(-1f, 1f), 0f)
+        rightJoystick.setPosition(right.coerceIn(-1f, 1f), 0f)
     }
 
     private fun joystickChange()

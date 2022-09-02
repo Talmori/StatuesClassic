@@ -37,6 +37,7 @@ import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
 import net.minecraft.util.registry.Registry
 import net.minecraft.world.World
 import talsumi.marderlib.content.IUpdatableBlockEntity
@@ -124,6 +125,12 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         return override
     }
 
+    fun dropItems()
+    {
+        for (item in inventory.getItems())
+            ItemStackUtil.dropStack(world!!, Vec3d(pos.x + 0.5, pos.y + 1.0, pos.z + 0.5), item, 10)
+    }
+
     fun setup(block: BlockState, name: String, uuid: UUID, data: StatueData)
     {
         this.playerUuid = uuid
@@ -139,20 +146,21 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
     {
         super.setWorld(world)
 
-        if (world.isClient && hasBeenSetup)
+        if (world.isClient)
             clientFakePlayer = StatuePlayerEntityFactory.getStatuePlayer(this, world, pos)
     }
 
     fun sendUpdatePacket()
     {
-        if (hasBeenSetup)
-            for (player in PlayerLookup.tracking(this))
-                talsumi.marderlib.networking.ServerPacketsOut.sendUpdateBlockEntityPacket(this, player)
+        for (player in PlayerLookup.tracking(this))
+            talsumi.marderlib.networking.ServerPacketsOut.sendUpdateBlockEntityPacket(this, player)
     }
 
     private fun onContentsChanged()
     {
-        sendUpdatePacket()
+        if (hasBeenSetup)
+            sendUpdatePacket()
+
         markDirty()
     }
 
@@ -165,7 +173,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             buf.writeString(playerName)
             buf.writeBoolean(data != null)
             data?.writePacket(buf)
-            buf.writeString(BlockStateUtil.blockStateToString(block!!))
+            buf.writeString(block!!.toString())
             buf.writeFloat(leftHandRotate)
             buf.writeFloat(rightHandRotate)
             buf.writeBoolean(hasCape)
@@ -208,8 +216,10 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             hasName = nbt.getBoolean("shows_name")
 
             //If we are made of an invalid block, mark the statue as un-setup.
-            if (block == null)
+            if (block == null) {
                 hasBeenSetup = false
+                markDirty()
+            }
         }
     }
 
@@ -221,7 +231,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             nbt.put("statue_data", data!!.save())
             nbt.putUuid("player_uuid", playerUuid!!)
             nbt.putString("player_name", playerName!!)
-            nbt.putString("block", BlockStateUtil.blockStateToString(block!!))
+            nbt.putString("block", block!!.toString())
             nbt.putFloat("left_hand_rotate", leftHandRotate)
             nbt.putFloat("right_hand_rotate", rightHandRotate)
             nbt.putBoolean("has_cape", hasCape)

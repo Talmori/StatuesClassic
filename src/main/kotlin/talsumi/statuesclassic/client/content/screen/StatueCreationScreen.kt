@@ -117,14 +117,12 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     fun receiveProfile(profile: GameProfile?)
     {
         if (profile != null) {
-            if (sentName != lastName) {
-                lastName = ""
-                return
-            }
-
             if (profile.name.lowercase() == lastName.lowercase()) {
                 this.trueName = profile.name
                 this.uuid = profile.id
+            }
+            else {
+                lastName = ""
             }
         }
         else {

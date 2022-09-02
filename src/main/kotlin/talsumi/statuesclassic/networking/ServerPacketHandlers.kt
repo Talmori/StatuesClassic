@@ -74,8 +74,13 @@ object ServerPacketHandlers {
                 screen.updateHands(left, right)
 
                 //Update joystick positions for every listening player
-                for (listener in (screen as MarderLibScreenHandlerAccessor).marderlib_getListeners())
-                    ServerPacketsOut.sendStatueHandsPacket(left, right, (listener as MarderLibPlayerListenerGrabber).marderlib_getOwningPlayer())
+                for (listener in (screen as MarderLibScreenHandlerAccessor).marderlib_getListeners()) {
+                    val listeningPlayer = (listener as MarderLibPlayerListenerGrabber).marderlib_getOwningPlayer()
+
+                    if (listeningPlayer != player)
+                        ServerPacketsOut.sendStatueHandsPacket(left, right, listeningPlayer)
+                }
+
             }
         }
     }

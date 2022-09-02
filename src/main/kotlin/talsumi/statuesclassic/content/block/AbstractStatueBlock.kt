@@ -40,7 +40,9 @@ import net.minecraft.state.property.Properties
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.BlockView
+import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
+import talsumi.statuesclassic.core.StatueHelper
 import java.util.*
 
 abstract class AbstractStatueBlock(settings: Settings) : Block(settings), Waterloggable {
@@ -54,6 +56,14 @@ abstract class AbstractStatueBlock(settings: Settings) : Block(settings), Waterl
     init
     {
         defaultState = defaultState.with(lightLevel, 0).with(Properties.WATERLOGGED, false)
+    }
+
+    fun replace(world: World, pos1: BlockPos, pos2: BlockPos)
+    {
+        val replacement = StatueHelper.removeStatue(world, pos1)
+        world.removeBlock(pos2, false)
+        world.setBlockState(pos2, replacement)
+        world.setBlockState(pos1, replacement)
     }
 
     override fun getFluidState(state: BlockState): FluidState = if (state.get(Properties.WATERLOGGED)) Fluids.WATER.getStill(false) else super.getFluidState(state)

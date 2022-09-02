@@ -24,6 +24,8 @@
 
 package talsumi.statuesclassic.core
 
+import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
 import net.minecraft.state.property.Properties
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -33,6 +35,7 @@ import net.minecraft.world.World
 import talsumi.marderlib.util.VectorUtil
 import talsumi.statuesclassic.content.ModBlocks
 import talsumi.statuesclassic.content.block.AbstractStatueBlock
+import talsumi.statuesclassic.content.block.StatueChildBlock
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import java.util.*
 
@@ -91,15 +94,16 @@ object StatueHelper {
         be.markDirty()
     }
 
-    fun removeStatue(block: AbstractStatueBlock)
+    fun removeStatue(world: World, pos: BlockPos): BlockState
     {
-
+        val be = (world.getBlockEntity(pos) ?: world.getBlockEntity(pos.down())) as? StatueBE ?: return Blocks.STONE.defaultState
+        return removeStatue(be)
     }
 
-    fun removeStatue(be: StatueBE)
+    fun removeStatue(be: StatueBE): BlockState
     {
-        val world = be.world
-        val state = be.block
+        be.dropItems()
+        return be.block ?: Blocks.STONE.defaultState
     }
 
     fun getStatueLuminance(be: StatueBE): Int = be.cachedState.get(AbstractStatueBlock.lightLevel)
