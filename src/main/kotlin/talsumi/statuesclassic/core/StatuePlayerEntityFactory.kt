@@ -30,13 +30,13 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import talsumi.statuesclassic.content.blockentity.StatueBE
-import talsumi.statuesclassic.client.content.entity.DummyPlayerEntity
+import talsumi.statuesclassic.client.content.entity.StatuePlayerEntity
 
-object DummyPlayerFactory {
+object StatuePlayerEntityFactory {
 
-    fun getDummyPlayer(statue: StatueBE, world: World, pos: BlockPos): PlayerEntity
+    fun getStatuePlayer(statue: StatueBE, world: World, pos: BlockPos): PlayerEntity
     {
-        val ent = DummyPlayerEntity(statue, world as ClientWorld, pos, GameProfile(null, "statuesclassic_fakeplayer"))
+        val ent = StatuePlayerEntity(statue, world as ClientWorld, pos, GameProfile(null, "statuesclassic_fakeplayer"))
         ent.setPos(pos.x + 0.5, pos.y + 0.0, pos.z + 0.5)
         return ent
     }

@@ -73,11 +73,13 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
      */
     private var trueName: String? = null
     private var lookupDelay = 0
-    private var data = StatueData(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
+    private var data = StatueData(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
     private var skin: Identifier? = null
     private var block: BlockState
 
     private val renderer = StatueBERenderer()
+
+    private var sentName: String? = null
 
     private val fullbright = 0xF000F0
 
@@ -85,12 +87,18 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     {
         backgroundWidth = 198
         backgroundHeight = 208
-        joystick1 = JoystickWidget(145, 7, 48, 48, 14, 198, 0, this, LiteralText("LeftArm"), ::joystickChange)
-        joystick2 = JoystickWidget(5, 7, 48, 48, 14, 198, 0, this, LiteralText("RightArm"), ::joystickChange)
-        joystick3 = JoystickWidget(145, 59, 48, 48, 14, 198, 0, this, LiteralText("LeftLeg"), ::joystickChange)
-        joystick4 = JoystickWidget(5, 59, 48, 48, 14, 198, 0, this, LiteralText("RightLeg"), ::joystickChange)
-        joystick5 = JoystickWidget(5, 111, 48, 48, 14, 198, 0, this, LiteralText("Head"), ::joystickChange)
-        joystick6 = JoystickWidget(145, 111, 48, 48, 14, 198, 0, this, LiteralText("Master"), ::joystickChange)
+        joystick1 = JoystickWidget(145, 7, 48, 48, 14, 198, 0, this,
+            TranslatableText("gui.statuesclassic.joystick.creation_left_arm"),  callback = ::joystickChange)
+        joystick2 = JoystickWidget(5, 7, 48, 48, 14, 198, 0, this,
+            TranslatableText("gui.statuesclassic.joystick.creation_right_arm"), true, callback = ::joystickChange)
+        joystick3 = JoystickWidget(145, 59, 48, 48, 14, 198, 0, this,
+            TranslatableText("gui.statuesclassic.joystick.creation_left_leg"), callback = ::joystickChange)
+        joystick4 = JoystickWidget(5, 59, 48, 48, 14, 198, 0, this,
+            TranslatableText("gui.statuesclassic.joystick.creation_right_leg"), true, callback = ::joystickChange)
+        joystick5 = JoystickWidget(5, 111, 48, 48, 14, 198, 0, this,
+            TranslatableText("gui.statuesclassic.joystick.creation_head"), true, callback = ::joystickChange)
+        joystick6 = JoystickWidget(145, 111, 48, 48, 14, 198, 0, this,
+            TranslatableText("gui.statuesclassic.joystick.creation_body"), callback = ::joystickChange)
         val randomizeButton = ButtonWidget(4, 162, 190, 20, 0, 208, ::randomize, {TranslatableText("gui.statuesclassic.randomize")})
         val formButton = object: ButtonWidget(4, 184, 190, 20, 0, 208, ::form, {TranslatableText("gui.statuesclassic.sculpt")}, { uuid != null }) {
             override fun getTooltip(): List<Text>?
@@ -106,11 +114,21 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
     fun infoComplete(): Boolean = uuid != null && trueName != null
 
-    fun receiveProfile(profile: GameProfile)
+    fun receiveProfile(profile: GameProfile?)
     {
-        if (profile.name.lowercase() == lastName.lowercase()) {
-            this.trueName = profile.name
-            this.uuid = profile.id
+        if (profile != null) {
+            if (sentName != lastName) {
+                lastName = ""
+                return
+            }
+
+            if (profile.name.lowercase() == lastName.lowercase()) {
+                this.trueName = profile.name
+                this.uuid = profile.id
+            }
+        }
+        else {
+            sentName = null
         }
     }
 
@@ -167,6 +185,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
             if (lookupDelay >= 40) {
                 lookupDelay = 0
                 //This will eventually update the uuid and username in this screen.
+                sentName = lastName
                 ClientPacketsOut.sendLookupUuidPacket(lastName)
             }
 

@@ -31,6 +31,8 @@ import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayNetworkHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.registry.Registry
+import talsumi.marderlib.mixininterfaces.MarderLibPlayerListenerGrabber
+import talsumi.marderlib.mixins.MarderLibScreenHandlerAccessor
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
 import talsumi.statuesclassic.core.StatueData
@@ -61,12 +63,20 @@ object ServerPacketHandlers {
 
     private fun receiveUpdateStatueHandsPacket(server: MinecraftServer, player: ServerPlayerEntity, handler: ServerPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
     {
-        val left = buf.readFloat()
-        val right = buf.readFloat()
+        val left = buf.readFloat().coerceIn(-1f, 1f)
+        val right = buf.readFloat().coerceIn(-1f, 1f)
 
         server.execute {
-            if (player.currentScreenHandler is StatueEquipmentScreenHandler)
-                (player.currentScreenHandler as StatueEquipmentScreenHandler).updateHands(left, right)
+            val screen = player.currentScreenHandler
+            if (screen is StatueEquipmentScreenHandler) {
+
+                //Update statue hands
+                screen.updateHands(left, right)
+
+                //Update joystick positions for every listening player
+                for (listener in (screen as MarderLibScreenHandlerAccessor).marderlib_getListeners())
+                    ServerPacketsOut.sendStatueHandsPacket(left, right, (listener as MarderLibPlayerListenerGrabber).marderlib_getOwningPlayer())
+            }
         }
     }
 
@@ -78,6 +88,9 @@ object ServerPacketHandlers {
             if (player.currentScreenHandler is StatueCreationScreenHandler) {
                 UUIDLookups.lookupProfileFromClient(player, server, username, whenFound = {
                     ServerPacketsOut.sendStatueProfilePacket(it, player)
+                },
+                whenFailed = {
+                    ServerPacketsOut.sendStatueProfilePacket(null, player)
                 })
             }
         }

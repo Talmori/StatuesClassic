@@ -28,6 +28,7 @@ import net.minecraft.client.model.Dilation
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.render.entity.model.PlayerEntityModel
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.util.math.Vec3f
 import talsumi.statuesclassic.core.StatueData
 
 
@@ -55,7 +56,5 @@ class StatueModel(val slim: Boolean) : PlayerEntityModel<AbstractClientPlayerEnt
         //Right leg
         rightLeg.setAngles(data.rightLegRaise, data.rightLegRotate, 0f)
         rightPants.setAngles(data.rightLegRaise, data.rightLegRotate, 0f)
-        //Master
-
     }
 }

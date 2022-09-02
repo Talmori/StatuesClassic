@@ -33,6 +33,7 @@ import net.minecraft.client.render.VertexConsumerProvider
 import net.minecraft.client.render.block.entity.BlockEntityRenderer
 import net.minecraft.client.render.entity.EntityRendererFactory
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3f
 import talsumi.marderlib.util.RenderUtil
@@ -68,12 +69,6 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         //Flip so we aren't upside down
         matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(180f))
 
-        //Apply master rotation
-        matrices.translate(0.0, 1.0, 0.0)
-        matrices.multiply(Vec3f.POSITIVE_Y.getRadialQuaternion(data.masterRotate))
-        matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(data.masterRaise))
-        matrices.translate(0.0, -1.0, 0.0)
-
         //Apply rotations from data. This will carry through into a PlayerEntityRenderer render call
         model.setAngles(data)
 
@@ -81,10 +76,19 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         try {
             if (statue != null) {
                 //If statue BlockEntity is present, render via a PlayerEntityRenderer. This allows armor, held items, etc.
-                renderer.render(statue, color, tickDelta, matrices, vertex, vertexProvider, light, overlay)
+                renderer.render(statue, data, color, tickDelta, matrices, vertex, vertexProvider, light, overlay)
             }
             else {
-                //If BlockEntity isn't present, render directly from a model. Used for the statue creation GUI.
+                //If statue BlockEntity isn't present, render directly from a model. Used for the statue creation GUI.
+                //Apply height offset
+                matrices.translate(0.0, data.heightOffset.toDouble(), 0.0)
+
+                //Apply master rotation
+                matrices.translate(0.0, 1.0, 0.0)
+                matrices.multiply(Vec3f.POSITIVE_Y.getRadialQuaternion(data.masterRotate))
+                matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(data.masterRaise))
+                matrices.translate(0.0, -1.0, 0.0)
+
                 model.render(matrices, vertex, light, overlay, color.red / 255f, color.green / 255f, color.blue / 255f, color.alpha / 255f)
             }
         } catch (e: Exception) {
@@ -130,7 +134,7 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
             matrices.push()
             matrices.translate(0.5, 1.5, 0.5)
 
-            render(statue, statue.data!!, statue.block?.defaultState ?: Blocks.STONE.defaultState, statue.playerUuid!!, cache.slim!!, cache.skin!!, tickDelta, matrices, vertexProvider, light, overlay)
+            render(statue, statue.data!!, statue.block ?: Blocks.STONE.defaultState, statue.playerUuid!!, cache.slim!!, cache.skin!!, tickDelta, matrices, vertexProvider, light, overlay)
             matrices.pop()
         }
     }

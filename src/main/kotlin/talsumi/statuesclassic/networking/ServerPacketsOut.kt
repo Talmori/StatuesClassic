@@ -36,14 +36,26 @@ import java.util.*
 
 object ServerPacketsOut {
 
-    val update_block_entity = Identifier(StatuesClassic.MODID, "update_block_entity")
     val send_statue_uuid = Identifier(StatuesClassic.MODID, "send_statue_uuid")
+    val send_statue_gui_hands = Identifier(StatuesClassic.MODID, "send_statue_gui_hands")
 
-    fun sendStatueProfilePacket(profile: GameProfile, player: ServerPlayerEntity)
+    fun sendStatueProfilePacket(profile: GameProfile?, player: ServerPlayerEntity)
     {
         val buf = PacketByteBufs.create()
-        buf.writeString(profile.name)
-        buf.writeUuid(profile.id)
+        buf.writeBoolean(profile != null)
+        if (profile != null) {
+            buf.writeString(profile.name)
+            buf.writeUuid(profile.id)
+        }
         ServerPlayNetworking.send(player, send_statue_uuid, buf)
+    }
+
+    fun sendStatueHandsPacket(left: Float, right: Float, player: ServerPlayerEntity)
+    {
+        val buf = PacketByteBufs.create()
+        buf.writeFloat(left)
+        buf.writeFloat(right)
+
+        ServerPlayNetworking.send(player, send_statue_gui_hands, buf)
     }
 }

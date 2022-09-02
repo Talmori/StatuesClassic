@@ -38,7 +38,8 @@ class StatueData(var leftArmRaise: Float,
                  var headRaise: Float,
                  var headRotate: Float,
                  var masterRaise: Float,
-                 var masterRotate: Float) {
+                 var masterRotate: Float,
+                 var heightOffset: Float) {
 
     companion object {
         fun fromPacket(buf: PacketByteBuf): StatueData
@@ -56,6 +57,7 @@ class StatueData(var leftArmRaise: Float,
                 buf.readFloat(),
                 buf.readFloat(),
                 buf.readFloat(),
+                buf.readFloat()
             )
         }
 
@@ -73,7 +75,8 @@ class StatueData(var leftArmRaise: Float,
                 headRaise = nbt.getFloat("headRaise"),
                 headRotate = nbt.getFloat("headRotate"),
                 masterRaise = nbt.getFloat("masterRaise"),
-                masterRotate = nbt.getFloat("masterRotate"))
+                masterRotate = nbt.getFloat("masterRotate"),
+                heightOffset = nbt.getFloat("heightOffset"))
         }
     }
 
@@ -91,6 +94,7 @@ class StatueData(var leftArmRaise: Float,
         buf.writeFloat(headRotate)
         buf.writeFloat(masterRaise)
         buf.writeFloat(masterRotate)
+        buf.writeFloat(heightOffset)
     }
 
     fun save(): NbtCompound
@@ -108,6 +112,7 @@ class StatueData(var leftArmRaise: Float,
         nbt.putFloat("headRotate", headRotate)
         nbt.putFloat("masterRaise", masterRaise)
         nbt.putFloat("masterRotate", masterRotate)
+        nbt.putFloat("heightOffset", heightOffset)
         return nbt
     }
 }

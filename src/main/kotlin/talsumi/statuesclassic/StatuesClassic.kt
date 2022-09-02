@@ -43,6 +43,7 @@ import talsumi.statuesclassic.content.ModScreenHandlers
 import talsumi.statuesclassic.networking.ServerPacketHandlers
 import java.nio.ByteBuffer
 
+//TODO: Replace statue blocks when mining statue
 @Suppress("UNUSED")
 object StatuesClassic: ModInitializer {
 

@@ -112,7 +112,6 @@ object SkinHandler {
         return textures.registerDynamicTexture("statuesclassic_${uuid}_${UUID.randomUUID()}".lowercase(), NativeImageBackedTexture(newImage))
     }
 
-    //TODO: Tweak this to make skin pixels less faded.
     /**
      * Mixes two skin and block pixels.
      * [skinArray] and [blockArray] are used to store intermediate values in. They can be omitted.
@@ -121,7 +120,7 @@ object SkinHandler {
     {
         val skinHSV = Color.RGBtoHSB(skin and 0x00FF0000 shr 16, skin and 0x0000FF00 shr 8, skin and 0x00000000FF, skinArray)
         val blockHSV = Color.RGBtoHSB(block and 0x000000FF, block and 0x0000FF00 shr 8, block and 0x00FF0000 shr 16, blockArray)
-        var sV = (blockHSV[2] + skinHSV[2] + skinHSV[2]) / 3f //Try: blockHSV[2] + skinHSV[2] + skinHSV[2] / 3f
+        var sV = (blockHSV[2] * 0.2f + skinHSV[2] * 0.8f).coerceIn(0f, 1f)
         var bV = blockHSV[2]
         if (sV > bV)
             sV -= (sV-bV) / 2f

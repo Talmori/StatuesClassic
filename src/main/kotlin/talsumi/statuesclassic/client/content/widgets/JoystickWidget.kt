@@ -25,6 +25,9 @@
 package talsumi.statuesclassic.client.content.widgets
 
 import com.mojang.blaze3d.systems.RenderSystem
+import com.sun.jna.platform.KeyboardUtils
+import net.minecraft.client.MinecraftClient
+import net.minecraft.client.input.KeyboardInput
 import net.minecraft.client.render.BufferRenderer
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.Tessellator
@@ -33,11 +36,12 @@ import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
 import net.minecraft.util.math.Vec2f
+import org.lwjgl.glfw.GLFW
 import talsumi.marderlib.screen.EnhancedScreen
 import talsumi.marderlib.screen.widget.BaseWidget
 import talsumi.marderlib.util.RenderUtil
 
-class JoystickWidget(x: Int, y: Int, width: Int, height: Int, val stickSize: Int, val u: Int, val v: Int, val screen: EnhancedScreen<*>, val tooltip: Text? = null, val callback: (() -> Unit)? = null) : BaseWidget(x, y, width, height) {
+class JoystickWidget(x: Int, y: Int, width: Int, height: Int, val stickSize: Int, val u: Int, val v: Int, val screen: EnhancedScreen<*>, val tooltip: Text? = null, val leftSideTooltip: Boolean = false, val callback: (() -> Unit)? = null) : BaseWidget(x, y, width, height) {
 
     val workingWidth = width-stickSize
     val workingHeight = height-stickSize
@@ -106,6 +110,19 @@ class JoystickWidget(x: Int, y: Int, width: Int, height: Int, val stickSize: Int
         val yOff = screen.getScreenY() + y
 
         return Pair(Vec2f(xOff+stickX, yOff+stickY), Vec2f(xOff+stickX+stickSize, yOff+stickY+stickSize))
+    }
+
+    override fun renderTooltip(screen: EnhancedScreen<*>, matrices: MatrixStack, mouseX: Int, mouseY: Int)
+    {
+        val text = getTooltip()?.get(0) ?: return
+        val mc = MinecraftClient.getInstance()
+
+        val x = if (leftSideTooltip)
+            screen.getScreenX() + x - mc.textRenderer.getWidth(text) - (width / 2)
+        else
+            screen.getScreenX() + x + width
+
+        screen.renderTooltip(matrices, text, x, screen.getScreenY() + y + (height / 2) + (mc.textRenderer.fontHeight))
     }
 
     private fun isMouseOverStick(mouseX: Double, mouseY: Double): Boolean

@@ -29,6 +29,7 @@ import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.EquipmentSlot
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.*
 import net.minecraft.nbt.NbtCompound
@@ -41,14 +42,14 @@ import net.minecraft.world.World
 import talsumi.marderlib.content.IUpdatableBlockEntity
 import talsumi.marderlib.storage.SlotLimitations
 import talsumi.marderlib.storage.item.ItemStackHandler
+import talsumi.marderlib.util.BlockStateUtil
 import talsumi.marderlib.util.ItemStackUtil
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.content.ModBlockEntities
 import talsumi.statuesclassic.content.ModItems
-import talsumi.statuesclassic.core.DummyPlayerFactory
+import talsumi.statuesclassic.core.StatuePlayerEntityFactory
 import talsumi.statuesclassic.core.StatueHelper
 import talsumi.statuesclassic.core.StatueData
-import talsumi.statuesclassic.networking.ServerPacketsOut
 import java.util.*
 
 class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.statue, pos, state), IUpdatableBlockEntity {
@@ -62,17 +63,17 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
      * 5: Left hand
      */
     val inventory = ItemStackHandler(6, ::onContentsChanged, arrayOf(
-        SlotLimitations(0, 0, allowed = { item -> item.item is BlockItem || (item.item as? ArmorItem)?.slotType == EquipmentSlot.HEAD || item.item is Wearable}),
-        SlotLimitations(1, 1, allowed = { item -> (item.item as? ArmorItem)?.slotType == EquipmentSlot.CHEST || item.item is Wearable }),
-        SlotLimitations(2, 2, allowed = { item -> (item.item as? ArmorItem)?.slotType == EquipmentSlot.LEGS || item.item is Wearable }),
-        SlotLimitations(3, 3, allowed = { item -> (item.item as? ArmorItem)?.slotType == EquipmentSlot.FEET || item.item is Wearable })
+        SlotLimitations(0, 0, allowed = { item -> item.item is BlockItem || LivingEntity.getPreferredEquipmentSlot(item.toStack()) == EquipmentSlot.HEAD}),
+        SlotLimitations(1, 1, allowed = { item -> LivingEntity.getPreferredEquipmentSlot(item.toStack()) == EquipmentSlot.CHEST }),
+        SlotLimitations(2, 2, allowed = { item -> LivingEntity.getPreferredEquipmentSlot(item.toStack()) == EquipmentSlot.LEGS }),
+        SlotLimitations(3, 3, allowed = { item -> LivingEntity.getPreferredEquipmentSlot(item.toStack()) == EquipmentSlot.FEET })
     ))
 
     var hasBeenSetup = false
     var playerUuid: UUID? = null
     var playerName: String? = null
     var data: StatueData? = null
-    var block: Block? = null
+    var block: BlockState? = null
 
     var hasCape = false
     var isColoured = false
@@ -103,6 +104,9 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
      */
     fun onRightClicked(player: PlayerEntity, hand: Hand, item: ItemStack, sneaking: Boolean): Boolean
     {
+        if (!hasBeenSetup)
+            return false
+
         val override = when (item.item) {
             Items.LEATHER -> { hasCape = !hasCape; if (hasCape) item.decrement(1) else ItemStackUtil.dropStack(world!!, player.pos, Items.LEATHER.defaultStack); true }
             Items.PAPER -> { hasName = !hasName; if (hasName) item.decrement(1) else ItemStackUtil.dropStack(world!!, player.pos, Items.PAPER.defaultStack); true }
@@ -120,7 +124,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         return override
     }
 
-    fun setup(block: Block, name: String, uuid: UUID, data: StatueData)
+    fun setup(block: BlockState, name: String, uuid: UUID, data: StatueData)
     {
         this.playerUuid = uuid
         this.data = data
@@ -128,21 +132,22 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         this.block = block
         hasBeenSetup = true
         markDirty()
-        StatuesClassic.LOGGER.info("Created statue at $pos, for player $uuid, made of $block")
+        StatuesClassic.LOGGER.debug("Created statue at $pos, for player $uuid, made of $block")
     }
 
     override fun setWorld(world: World)
     {
         super.setWorld(world)
 
-        if (world.isClient)
-            clientFakePlayer = DummyPlayerFactory.getDummyPlayer(this, world, pos)
+        if (world.isClient && hasBeenSetup)
+            clientFakePlayer = StatuePlayerEntityFactory.getStatuePlayer(this, world, pos)
     }
 
     fun sendUpdatePacket()
     {
-        for (player in PlayerLookup.tracking(this))
-            talsumi.marderlib.networking.ServerPacketsOut.sendUpdateBlockEntityPacket(this, player)
+        if (hasBeenSetup)
+            for (player in PlayerLookup.tracking(this))
+                talsumi.marderlib.networking.ServerPacketsOut.sendUpdateBlockEntityPacket(this, player)
     }
 
     private fun onContentsChanged()
@@ -160,7 +165,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             buf.writeString(playerName)
             buf.writeBoolean(data != null)
             data?.writePacket(buf)
-            buf.writeString(block!!.registryEntry.registryKey().value.toString())
+            buf.writeString(BlockStateUtil.blockStateToString(block!!))
             buf.writeFloat(leftHandRotate)
             buf.writeFloat(rightHandRotate)
             buf.writeBoolean(hasCape)
@@ -178,7 +183,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             playerName = buf.readString()
             if (buf.readBoolean())
                 data = StatueData.fromPacket(buf)
-            block = Registry.BLOCK.get(Identifier(buf.readString()))
+            block = BlockStateUtil.blockStateFromString(buf.readString())
             leftHandRotate = buf.readFloat()
             rightHandRotate = buf.readFloat()
             hasCape = buf.readBoolean()
@@ -195,12 +200,16 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             data = StatueData.load(nbt.getCompound("statue_data"))
             playerUuid = nbt.getUuid("player_uuid")
             playerName = nbt.getString("player_name")
-            block = Registry.BLOCK.get(Identifier(nbt.getString("block")))
+            block = BlockStateUtil.blockStateFromString(nbt.getString("block"))
             leftHandRotate = nbt.getFloat("left_hand_rotate")
             rightHandRotate = nbt.getFloat("right_hand_rotate")
             hasCape = nbt.getBoolean("has_cape")
             isColoured = nbt.getBoolean("is_coloured")
             hasName = nbt.getBoolean("shows_name")
+
+            //If we are made of an invalid block, mark the statue as un-setup.
+            if (block == null)
+                hasBeenSetup = false
         }
     }
 
@@ -212,7 +221,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
             nbt.put("statue_data", data!!.save())
             nbt.putUuid("player_uuid", playerUuid!!)
             nbt.putString("player_name", playerName!!)
-            nbt.putString("block", block!!.registryEntry.registryKey().value.toString())
+            nbt.putString("block", BlockStateUtil.blockStateToString(block!!))
             nbt.putFloat("left_hand_rotate", leftHandRotate)
             nbt.putFloat("right_hand_rotate", rightHandRotate)
             nbt.putBoolean("has_cape", hasCape)

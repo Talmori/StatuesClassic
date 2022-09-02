@@ -24,9 +24,11 @@
 
 package talsumi.statuesclassic.client.content.screen
 
+import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
+import net.minecraft.text.TranslatableText
 import net.minecraft.util.Identifier
 import talsumi.marderlib.screen.EnhancedScreen
 import talsumi.statuesclassic.StatuesClassic
@@ -46,8 +48,10 @@ class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: Pl
     init
     {
         backgroundHeight = 179
-        leftJoystick = JoystickWidget(7, 67, 51, 14, 14, 176, 0, this, LiteralText("LeftHeld"), ::joystickChange)
-        rightJoystick = JoystickWidget(117, 67, 51, 14, 14, 176, 0, this, LiteralText("RightHeld"), ::joystickChange)
+        leftJoystick = JoystickWidget(7, 67, 51, 14, 14, 176, 0, this,
+            TranslatableText("gui.statuesclassic.joystick.equipment_left_hand"), true, callback = ::joystickChange)
+        rightJoystick = JoystickWidget(117, 67, 51, 14, 14, 176, 0, this,
+            TranslatableText("gui.statuesclassic.joystick.equipment_right_hand"), callback = ::joystickChange)
 
         addWidgets(leftJoystick, rightJoystick)
 
@@ -55,6 +59,12 @@ class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: Pl
         rightJoystick.setPosition(screenHandler.statue?.leftHandRotate ?: 0f, 0f)
 
         setup = true
+    }
+
+    fun joysticksUpdatedFromServer(left: Float, right: Float)
+    {
+        leftJoystick.stickX = left.coerceIn(-1f, 1f)
+        rightJoystick.stickX = right.coerceIn(-1f, 1f)
     }
 
     private fun joystickChange()
@@ -96,4 +106,6 @@ class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: Pl
 
         return super.mouseReleased(mouseX, mouseY, button)
     }
+
+    override fun drawForeground(matrices: MatrixStack?, mouseX: Int, mouseY: Int) = Unit
 }

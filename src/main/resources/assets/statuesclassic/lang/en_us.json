@@ -8,5 +8,13 @@
   "gui.statuesclassic.sculpt": "Sculpt!",
   "gui.statuesclassic.sculpt_invalid": "Invalid username",
   "gui.statuesclassic.randomize": "Randomize",
-  "gui.statuesclassic.player_name_field": "Player Name"
+  "gui.statuesclassic.player_name_field": "Player Name",
+  "gui.statuesclassic.joystick.creation_head": "Head",
+  "gui.statuesclassic.joystick.creation_left_arm": "Left Arm",
+  "gui.statuesclassic.joystick.creation_left_leg": "Left Leg",
+  "gui.statuesclassic.joystick.creation_right_arm": "Right Arm",
+  "gui.statuesclassic.joystick.creation_right_leg": "Right Leg",
+  "gui.statuesclassic.joystick.creation_body": "Body",
+  "gui.statuesclassic.joystick.equipment_left_hand": "Left Hand",
+  "gui.statuesclassic.joystick.equipment_right_hand": "Right Hand"
 }

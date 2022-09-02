@@ -28,7 +28,9 @@ import net.minecraft.state.property.Properties
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec3f
 import net.minecraft.world.World
+import talsumi.marderlib.util.VectorUtil
 import talsumi.statuesclassic.content.ModBlocks
 import talsumi.statuesclassic.content.block.AbstractStatueBlock
 import talsumi.statuesclassic.content.blockentity.StatueBE
@@ -39,9 +41,7 @@ object StatueHelper {
     fun isBlockValidForStatue(world: World, pos: BlockPos): Boolean
     {
         val state = world.getBlockState(pos)
-        if (state.hasBlockEntity() || world.getBlockEntity(pos) != null)
-            return false
-        if (state.isAir || !state.isFullCube(world, pos))
+        if (state.hasBlockEntity() || world.getBlockEntity(pos) != null || state.isAir || !state.isFullCube(world, pos) || state.block.hardness < 0)
             return false
 
         return true
@@ -59,7 +59,7 @@ object StatueHelper {
     {
         if (canCreateStatueHere(world, bottomPos)) {
             val state = world.getBlockState(bottomPos)
-            val block = world.getBlockState(bottomPos).block
+            val block = world.getBlockState(bottomPos)
 
             //Sanity check for facing
             if (facing == Direction.UP || facing == Direction.DOWN) return
@@ -89,6 +89,17 @@ object StatueHelper {
         world.setBlockState(be.pos, block.with(AbstractStatueBlock.lightLevel, luminance))
         world.setBlockState(childPos, childBlock.with(AbstractStatueBlock.lightLevel, luminance))
         be.markDirty()
+    }
+
+    fun removeStatue(block: AbstractStatueBlock)
+    {
+
+    }
+
+    fun removeStatue(be: StatueBE)
+    {
+        val world = be.world
+        val state = be.block
     }
 
     fun getStatueLuminance(be: StatueBE): Int = be.cachedState.get(AbstractStatueBlock.lightLevel)
@@ -131,7 +142,14 @@ object StatueHelper {
         data.headRaise = (joystick5Y * 75f) * MathHelper.RADIANS_PER_DEGREE
         data.headRotate = (-joystick5X * 90f) * MathHelper.RADIANS_PER_DEGREE
         data.masterRaise = joystick6Y
-        data.masterRotate = joystick6X
+        data.masterRotate = -joystick6X
+
+        val rightLegHeightOffset = Vec3f(0f, 0.5f, 0f)
+        rightLegHeightOffset.add(VectorUtil.multiply(Vec3f(0f, data.rightLegRaise, 0f), 1f, 0.75f, 1f))
+        val leftLegHeightOffset = Vec3f(0f, 0.5f, 0f)
+        leftLegHeightOffset.add(VectorUtil.multiply(Vec3f(0f, data.leftLegRaise, 0f), 1f, 0.75f, 1f))
+
+        data.heightOffset = -(rightLegHeightOffset.y.coerceAtLeast(leftLegHeightOffset.y) + 0.05f).coerceAtMost(0f)
     }
 
     /**

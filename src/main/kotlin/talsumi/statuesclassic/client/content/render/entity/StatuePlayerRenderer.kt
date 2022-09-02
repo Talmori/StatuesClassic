@@ -55,6 +55,7 @@ import net.minecraft.world.RaycastContext
 import talsumi.statuesclassic.client.content.model.StatueModel
 import talsumi.statuesclassic.client.core.SkinHandler
 import talsumi.statuesclassic.content.blockentity.StatueBE
+import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.core.StatueHelper
 import java.awt.Color
 import java.util.*
@@ -69,7 +70,7 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
      */
     override fun getModel(): PlayerEntityModel<AbstractClientPlayerEntity> = statueModel
 
-    fun render(statue: StatueBE, color: Color, tickDelta: Float, matrices: MatrixStack, vertex: VertexConsumer, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
+    fun render(statue: StatueBE, data: StatueData, color: Color, tickDelta: Float, matrices: MatrixStack, vertex: VertexConsumer, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
     {
         //Render the statue model.
         matrices.push()
@@ -78,6 +79,15 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
         val facing = statue.cachedState.get(Properties.HORIZONTAL_FACING)
         var rotate = facing.asRotation()
         matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rotate))
+
+        //Apply height offset
+        matrices.translate(0.0, data.heightOffset.toDouble(), 0.0)
+
+        //Apply master rotation
+        matrices.translate(0.0, 1.0, 0.0)
+        matrices.multiply(Vec3f.POSITIVE_Y.getRadialQuaternion(data.masterRotate))
+        matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(data.masterRaise))
+        matrices.translate(0.0, -1.0, 0.0)
 
         statueModel.render(matrices, vertex, light, overlay, (color.red / 255f), (color.green / 255f), (color.blue / 255f), color.alpha / 255f)
 
@@ -121,6 +131,7 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
                 matrices.push()
                 matrices.scale(1f, -1f, -1f)
                 matrices.translate(0.0, -1.4, 0.0)
+                matrices.translate(0.0, -data.heightOffset.toDouble(), 0.0)
                 renderLabelIfPresent(statue.clientFakePlayer as AbstractClientPlayerEntity, Text.of(statue.playerName), matrices, vertexProvider, light)
                 matrices.pop()
             }
