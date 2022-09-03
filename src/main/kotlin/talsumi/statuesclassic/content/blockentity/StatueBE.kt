@@ -25,7 +25,6 @@
 package talsumi.statuesclassic.content.blockentity
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
-import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.EquipmentSlot
@@ -35,10 +34,8 @@ import net.minecraft.item.*
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.Hand
-import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
-import net.minecraft.util.registry.Registry
 import net.minecraft.world.World
 import talsumi.marderlib.content.IUpdatableBlockEntity
 import talsumi.marderlib.storage.SlotLimitations
@@ -111,7 +108,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         val override = when (item.item) {
             Items.LEATHER -> { hasCape = !hasCape; if (hasCape) item.decrement(1) else ItemStackUtil.dropStack(world!!, player.pos, Items.LEATHER.defaultStack); true }
             Items.PAPER -> { hasName = !hasName; if (hasName) item.decrement(1) else ItemStackUtil.dropStack(world!!, player.pos, Items.PAPER.defaultStack); true }
-            ModItems.palette -> { if (!isColoured) item.decrement(1); isColoured = true; true }
+            ModItems.palette -> { isColoured = !isColoured; if (isColoured) item.decrement(1) else ItemStackUtil.dropStack(world!!, player.pos, ModItems.palette.defaultStack); true }
             Items.GUNPOWDER -> { if (StatueHelper.getStatueLuminance(this) > 0) { StatueHelper.modifyStatueLuminance(this, 0); item.decrement(1);}; true }
             Items.GLOWSTONE_DUST -> { if (StatueHelper.getStatueLuminance(this) < 15) { StatueHelper.modifyStatueLuminance(this, 15); item.decrement(1);}; true }
             else -> false
@@ -125,10 +122,16 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
         return override
     }
 
-    fun dropItems()
+    fun statueRemoved()
     {
         for (item in inventory.getItems())
             ItemStackUtil.dropStack(world!!, Vec3d(pos.x + 0.5, pos.y + 1.0, pos.z + 0.5), item, 10)
+        if (hasCape)
+            ItemStackUtil.dropStack(world!!, Vec3d(pos.x + 0.5, pos.y + 1.0, pos.z + 0.5), Items.LEATHER.defaultStack, 10)
+        if (hasName)
+            ItemStackUtil.dropStack(world!!, Vec3d(pos.x + 0.5, pos.y + 1.0, pos.z + 0.5), Items.PAPER.defaultStack, 10)
+        if (isColoured)
+            ItemStackUtil.dropStack(world!!, Vec3d(pos.x + 0.5, pos.y + 1.0, pos.z + 0.5), ModItems.palette.defaultStack, 10)
     }
 
     fun setup(block: BlockState, name: String, uuid: UUID, data: StatueData)

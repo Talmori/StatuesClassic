@@ -69,10 +69,7 @@ class StatueEquipmentScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val
             StatueHelper.updateStatueHands(statue.pos, statue.world ?: return, left, right)
     }
 
-    override fun canUse(player: PlayerEntity): Boolean
-    {
-        return true
-    }
+    override fun canUse(player: PlayerEntity): Boolean = statue?.inventory?.canPlayerUse(player) == true && !statue?.isRemoved
 
     override fun transferSlot(player: PlayerEntity, index: Int): ItemStack = handleShiftClick(player, index, inv)
 

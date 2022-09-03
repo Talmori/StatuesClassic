@@ -35,7 +35,6 @@ import net.minecraft.world.World
 import talsumi.marderlib.util.VectorUtil
 import talsumi.statuesclassic.content.ModBlocks
 import talsumi.statuesclassic.content.block.AbstractStatueBlock
-import talsumi.statuesclassic.content.block.StatueChildBlock
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import java.util.*
 
@@ -102,7 +101,7 @@ object StatueHelper {
 
     fun removeStatue(be: StatueBE): BlockState
     {
-        be.dropItems()
+        be.statueRemoved()
         return be.block ?: Blocks.STONE.defaultState
     }
 

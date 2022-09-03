@@ -27,6 +27,8 @@ package talsumi.statuesclassic.client.content.render.blockentity
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.color.block.BlockColorProvider
+import net.minecraft.client.color.block.BlockColors
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.render.VertexConsumerProvider
@@ -110,7 +112,7 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         val renderer = if (slim) slimStatueRenderer else statueRenderer
         val colorized = statue?.isColoured ?: false
         val texture = (if (!colorized) SkinHandler.getTexturedSkin(uuid, block) else texture)
-        val color = Color.WHITE//if (colorized) Color.WHITE else blockData.color
+        val color = MinecraftClient.getInstance().blockColors.getColor(block, null, null, 0).let { if (it > -1) Color(it) else Color.WHITE }
 
         if (texture != null) {
             val vertex = vertexProvider.getBuffer(RenderLayer.getEntityTranslucent(texture))
