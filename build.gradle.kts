@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.ir.backend.js.compile
+
 plugins {
     id("fabric-loom")
     val kotlinVersion: String by System.getProperties()
@@ -11,7 +13,11 @@ val modVersion: String by project
 version = modVersion
 val mavenGroup: String by project
 group = mavenGroup
-repositories {}
+repositories {
+    flatDir {
+        dirs("libs")
+    }
+}
 dependencies {
     val minecraftVersion: String by project
     minecraft("com.mojang:minecraft:$minecraftVersion")
@@ -23,6 +29,8 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api:fabric-api:$fabricVersion")
     val fabricKotlinVersion: String by project
     modImplementation("net.fabricmc:fabric-language-kotlin:$fabricKotlinVersion")
+    val marderLibVersion: String by project
+    modImplementation("marderlib:marderlib:$marderLibVersion")
 }
 tasks {
     val javaVersion = JavaVersion.VERSION_17
