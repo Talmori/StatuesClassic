@@ -33,18 +33,23 @@ import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.DefaultSkinHelper
 import net.minecraft.util.Identifier
+import net.minecraft.util.Util
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL12
+import talsumi.statuesclassic.StatuesClassic
 import java.awt.Color
 import java.io.InputStream
 import java.util.*
+import java.util.concurrent.Executors
 import javax.imageio.ImageIO
 import kotlin.collections.HashMap
 
 object SkinHandler {
 
+    private val executor = Util.getMainWorkerExecutor()
     private val cache = HashMap<UUID, SkinData>()
-    private val texturedCache = HashMap<Pair<UUID?, BlockState>, Identifier>()
+    private val texturedCache = HashMap<Pair<UUID, BlockState>, AsyncHolder>()
+    private val baseUUID = UUID.randomUUID()
 
     fun reset()
     {
@@ -57,22 +62,22 @@ object SkinHandler {
      */
     fun getTexturedSkin(uuid: UUID?, block: BlockState): Identifier?
     {
-        val key = Pair(uuid, block)
+        val key = Pair(uuid ?: baseUUID, block)
         if (!texturedCache.containsKey(key)) {
-            val skin = makeTexturedSkin(uuid, block)
-            if (skin != null)
-                texturedCache[key] = skin
-            return skin
+            val holder = AsyncHolder(null)
+            val base = (if (uuid != null) getCachedSkin(uuid)?.skin else DefaultSkinHelper.getTexture()) ?: return null
+            makeTexturedSkin(base, uuid ?: baseUUID, block, holder)
+            texturedCache[key] = holder
+            return holder.tex
         }
         else {
-            return texturedCache[key]!!
+            return texturedCache[key]!!.tex
         }
     }
 
-    private fun makeTexturedSkin(uuid: UUID?, block: BlockState): Identifier?
+    private fun makeTexturedSkin(baseSkin: Identifier, uuid: UUID, block: BlockState, holder: AsyncHolder)
     {
         val sTime = System.currentTimeMillis()
-        val baseSkin = (if (uuid != null) getCachedSkin(uuid)?.skin else DefaultSkinHelper.getTexture()) ?: return null
 
         val mc = MinecraftClient.getInstance()
         val textures = mc.textureManager
@@ -92,24 +97,26 @@ object SkinHandler {
         val skinPixels = IntArray(64 * 64)
         pixelsBuffer.get(skinPixels)
 
-        val newImage = NativeImage(64, 64, true)
+        executor.execute {
+            val newImage = NativeImage(64, 64, true)
 
-        val skinArray = FloatArray(3)
-        val blockArray = FloatArray(3)
+            val skinArray = FloatArray(3)
+            val blockArray = FloatArray(3)
 
-        //Calculate the new colour of each pixel
-        for (rgba in skinPixels.withIndex()) {
-            val x = (rgba.index % 64)
-            val y = (rgba.index / 64)
-            val blockX = (x % 16) * (width / 16)
-            val blockY = (y % 16) * (height / 16)
-            val blockIndex = (blockY * width) + blockX
+            //Calculate the new colour of each pixel
+            for (rgba in skinPixels.withIndex()) {
+                val x = (rgba.index % 64)
+                val y = (rgba.index / 64)
+                val blockX = (x % 16) * (width / 16)
+                val blockY = (y % 16) * (height / 16)
+                val blockIndex = (blockY * width) + blockX
 
-            newImage.setColor(x, y, mixColors(rgba.value, blockImage[blockIndex], skinArray, blockArray))
+                newImage.setColor(x, y, mixColors(rgba.value, blockImage[blockIndex], skinArray, blockArray))
+            }
+
+            val eTime = System.currentTimeMillis()
+            holder.tex = textures.registerDynamicTexture("statuesclassic_${uuid}_${UUID.randomUUID()}".lowercase(), NativeImageBackedTexture(newImage))
         }
-
-        val eTime = System.currentTimeMillis()
-        return textures.registerDynamicTexture("statuesclassic_${uuid}_${UUID.randomUUID()}".lowercase(), NativeImageBackedTexture(newImage))
     }
 
     /**
@@ -136,6 +143,7 @@ object SkinHandler {
         return try {
             mc.resourceManager.getResource(Identifier(sprite.id.namespace, "textures/${sprite.id.path}.png")).inputStream
         } catch (e: Exception) {
+            e.printStackTrace()
             null
         }
     }
@@ -149,8 +157,9 @@ object SkinHandler {
             cache[uuid] = data
 
             loadSkin(uuid, Type.SKIN) {
-                    id, tex -> data!!.skin = id
-                    data!!.slim = tex.getMetadata("model") == "slim"
+                    id, tex ->
+                data!!.skin = id
+                data!!.slim = tex.getMetadata("model") == "slim"
             }
             loadSkin(uuid, Type.CAPE) { id, tex -> data!!.cape = id }
             loadSkin(uuid, Type.ELYTRA) { id, tex -> data!!.elytra = id }
@@ -175,7 +184,7 @@ object SkinHandler {
         )
     }
 
-    class SkinData(var skin: Identifier?, var cape: Identifier?, var elytra: Identifier?, var slim: Boolean?, private var complete: Boolean = false) {
+    class SkinData(@Volatile var skin: Identifier?, @Volatile var cape: Identifier?, @Volatile var elytra: Identifier?, @Volatile var slim: Boolean?, private var complete: Boolean = false) {
 
         fun isComplete(): Boolean
         {
@@ -192,4 +201,6 @@ object SkinHandler {
 
         override fun toString(): String = "SkinData(skin=$skin, cape=$cape, elytra=$elytra, slim=$slim)"
     }
+
+    class AsyncHolder(var tex: Identifier?)
 }

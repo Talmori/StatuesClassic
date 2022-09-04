@@ -44,6 +44,7 @@ object ClientPacketHandlers {
 
     fun receiveStatueProfilePacket(client: MinecraftClient, handler: ClientPlayNetworkHandler, buf: PacketByteBuf, responseSender: PacketSender)
     {
+        val queriedName = buf.readString()
         val valid = buf.readBoolean()
         val username = if (valid) buf.readString() else null
         val uuid = if (valid) buf.readUuid() else null
@@ -52,7 +53,7 @@ object ClientPacketHandlers {
             val screen = client.currentScreen
 
             if (screen is StatueCreationScreen)
-                screen.receiveProfile(if (valid) GameProfile(uuid, username) else null)
+                screen.receiveProfile(queriedName, if (valid) GameProfile(uuid, username) else null)
         }
     }
 

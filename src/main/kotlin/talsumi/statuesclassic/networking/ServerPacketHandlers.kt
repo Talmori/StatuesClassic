@@ -92,10 +92,10 @@ object ServerPacketHandlers {
         server.execute {
             if (player.currentScreenHandler is StatueCreationScreenHandler) {
                 UUIDLookups.lookupProfileFromClient(player, server, username, whenFound = {
-                    ServerPacketsOut.sendStatueProfilePacket(it, player)
+                    ServerPacketsOut.sendStatueProfilePacket(username, it, player)
                 },
                 whenFailed = {
-                    ServerPacketsOut.sendStatueProfilePacket(null, player)
+                    ServerPacketsOut.sendStatueProfilePacket(username,null, player)
                 })
             }
         }

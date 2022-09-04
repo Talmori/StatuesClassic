@@ -54,7 +54,7 @@ import talsumi.statuesclassic.core.UUIDLookups
 import talsumi.statuesclassic.networking.ClientPacketsOut
 import java.util.*
 
-class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: PlayerInventory?, title: Text?) :
+class StatueCreationScreenOld(handler: StatueCreationScreenHandler, inventory: PlayerInventory?, title: Text?) :
     EnhancedScreen<StatueCreationScreenHandler>(handler, inventory, title, Identifier(StatuesClassic.MODID, "textures/gui/statue_creation_overlay.png")) {
 
     private val underlayTexture = Identifier(StatuesClassic.MODID, "textures/gui/statue_creation_underlay.png")
@@ -65,23 +65,21 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     private val joystick5: JoystickWidget
     private val joystick6: JoystickWidget
     private lateinit var nameField: TextFieldWidget
-    /**
-     * The name that was stored in [nameField] the previous tick.
-     */
     private var lastName: String = ""
-    /**
-     * The UUID sent by the server that matches the name queried.
-     */
     private var uuid: UUID? = null
+
     /**
      * The actual name (case-sensitive) of the shown player.
      */
     private var trueName: String? = null
     private var lookupDelay = 0
     private var data = StatueData(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
+    private var skin: Identifier? = null
     private var block: BlockState
 
     private val renderer = StatueBERenderer()
+
+    private var sentName: String? = null
 
     private val fullbright = 0xF000F0
 
@@ -105,7 +103,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
         val formButton = object: ButtonWidget(4, 184, 190, 20, 0, 208, ::form, {TranslatableText("gui.statuesclassic.sculpt")}, { uuid != null }) {
             override fun getTooltip(): List<Text>?
             {
-                return if (uuid == null) listOf(TranslatableText("gui.statuesclassic.sculpt_invalid")) else null
+                return if (infoComplete()) listOf(TranslatableText("gui.statuesclassic.sculpt_invalid")) else null
             }
         }
 
@@ -158,45 +156,44 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
                 widget.setPosition(Math.random().toFloat() * 2f -1f,Math.random().toFloat() * 2f -1f)
     }
 
-    fun receiveProfile(queriedName: String, profile: GameProfile?)
+    fun infoComplete(): Boolean = uuid != null && trueName != null
+
+    fun receiveProfile(profile: GameProfile?)
     {
-        if (queriedName.lowercase() == lastName.lowercase()) {
-            if (profile != null) {
-                uuid = profile.id
-                trueName = profile.name
+        if (profile != null) {
+            if (profile.name.lowercase() == lastName.lowercase()) {
+                this.trueName = profile.name
+                this.uuid = profile.id
+            }
+            else {
+                lastName = ""
             }
         }
         else {
-            //If name has changed while the lookup was processing, schedule another lookup
-            lookupDelay = 0
+            sentName = null
         }
     }
 
     override fun handledScreenTick()
     {
-        //Check if the input name has changed.
-        if ((nameField.text.isNotEmpty() && nameField.text != lastName)) {
-            //Schedule a lookup request
-            if (lookupDelay == -1)
-                lookupDelay = 0
+        if ((nameField.text.isNotEmpty() && nameField.text != lastName) || lookupDelay > 0) {
+            lookupDelay++
 
-            //Invalidate uuid and skin
-            invalidateInfo()
+            //Make sure not to spam lookup requests.
+            if (lookupDelay >= 40) {
+                lookupDelay = 0
+                //This will eventually update the uuid and username in this screen.
+                sentName = lastName
+                ClientPacketsOut.sendLookupUuidPacket(lastName)
+            }
+
+            //Invalidate uuid and skin when input changes
+            if (lastName != nameField.text)
+                invalidateInfo()
 
             lastName = nameField.text
             if (lastName.isEmpty())
                 invalidateInfo()
-        }
-
-        if (lookupDelay > -1) {
-            lookupDelay++
-
-            //Make sure not to spam lookup requests. The server-enforced limit is 1 per second, per player.
-            if (lookupDelay >= 25) {
-                lookupDelay = -1
-                //This will eventually update the uuid and username in this screen.
-                ClientPacketsOut.sendLookupUuidPacket(lastName)
-            }
         }
     }
 
@@ -204,6 +201,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     {
         uuid = null
         trueName = null
+        skin = null
     }
 
     override fun render(matrices: MatrixStack, mouseX: Int, mouseY: Int, delta: Float)
@@ -262,6 +260,11 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
         snapshot.restore()
         matrices.pop()
+    }
+
+    private fun skinAvailable(type: MinecraftProfileTexture.Type, id: Identifier, texture: MinecraftProfileTexture)
+    {
+        skin = id
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean

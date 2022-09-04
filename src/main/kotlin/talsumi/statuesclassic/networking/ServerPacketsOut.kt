@@ -39,9 +39,10 @@ object ServerPacketsOut {
     val send_statue_uuid = Identifier(StatuesClassic.MODID, "send_statue_uuid")
     val send_statue_gui_hands = Identifier(StatuesClassic.MODID, "send_statue_gui_hands")
 
-    fun sendStatueProfilePacket(profile: GameProfile?, player: ServerPlayerEntity)
+    fun sendStatueProfilePacket(queriedName: String, profile: GameProfile?, player: ServerPlayerEntity)
     {
         val buf = PacketByteBufs.create()
+        buf.writeString(queriedName)
         buf.writeBoolean(profile != null)
         if (profile != null) {
             buf.writeString(profile.name)
