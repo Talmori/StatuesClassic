@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "statuesclassic",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "name": "Statues Classic",
   "description": "A revival of AUTOMATIC_MAIDEN's Statues mod.",
   "authors": [
@@ -29,6 +29,6 @@
     "fabric-language-kotlin": ">=1.7.1+kotlin.1.6.10",
     "minecraft": "1.18.2",
     "java": ">=17",
-    "marderlib": ">=1.18.2-0.0.1"
+    "marderlib": ">=1.18.2-1.0.0"
   }
 }

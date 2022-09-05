@@ -49,9 +49,9 @@ class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: Pl
     {
         backgroundHeight = 179
         leftJoystick = JoystickWidget(7, 67, 51, 14, 14, 176, 0, this,
-            TranslatableText("gui.statuesclassic.joystick.equipment_left_hand"), true, callback = ::joystickChange)
+            TranslatableText("gui.statuesclassic.joystick.equipment_right_hand"), true, callback = ::joystickChange)
         rightJoystick = JoystickWidget(117, 67, 51, 14, 14, 176, 0, this,
-            TranslatableText("gui.statuesclassic.joystick.equipment_right_hand"), callback = ::joystickChange)
+            TranslatableText("gui.statuesclassic.joystick.equipment_left_hand"), callback = ::joystickChange)
 
         addWidgets(leftJoystick, rightJoystick)
 
