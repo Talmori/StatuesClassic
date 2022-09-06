@@ -27,19 +27,26 @@ package talsumi.statuesclassic.client.core
 import com.mojang.authlib.GameProfile
 import com.mojang.authlib.minecraft.MinecraftProfileTexture
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type
+import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener
 import net.minecraft.block.BlockState
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.DefaultSkinHelper
+import net.minecraft.resource.ResourceManager
+import net.minecraft.resource.ResourceReloader
 import net.minecraft.util.Identifier
 import net.minecraft.util.Util
+import net.minecraft.util.profiler.Profiler
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL12
 import talsumi.statuesclassic.StatuesClassic
 import java.awt.Color
 import java.io.InputStream
 import java.util.*
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import javax.imageio.ImageIO
 import kotlin.collections.HashMap
@@ -88,7 +95,9 @@ object SkinHandler {
         val blockImage = streamBlockTexture(block).use { ImageIO.read(it) }.let {
             width = it.width
             height = it.height
-            it.getRGB(0, 0, it.width, it.height, null, 0, it.width.coerceAtLeast(it.height))}
+            it.getRGB(0, 0, it.width, it.height, null, 0, it.width)}
+        val blockSize = height.coerceAtMost(width)
+        val sampleResolution = 16.coerceAtMost(blockSize)
 
         //Read in skin texture
         textures.getTexture(baseSkin).bindTexture()
@@ -107,8 +116,8 @@ object SkinHandler {
             for (rgba in skinPixels.withIndex()) {
                 val x = (rgba.index % 64)
                 val y = (rgba.index / 64)
-                val blockX = (x % 16) * (width / 16)
-                val blockY = (y % 16) * (height / 16)
+                val blockX = (x % sampleResolution) * (blockSize / sampleResolution)
+                val blockY = (y % sampleResolution) * (blockSize / sampleResolution)
                 val blockIndex = (blockY * width) + blockX
 
                 newImage.setColor(x, y, mixColors(rgba.value, blockImage[blockIndex], skinArray, blockArray))
@@ -182,6 +191,14 @@ object SkinHandler {
                 }
             }, true
         )
+    }
+
+    object ReloadListener: SimpleSynchronousResourceReloadListener {
+        val id = Identifier(StatuesClassic.MODID, "statue_skin_reload_listener")
+
+        override fun reload(manager: ResourceManager?) = reset()
+
+        override fun getFabricId(): Identifier = id
     }
 
     class SkinData(@Volatile var skin: Identifier?, @Volatile var cape: Identifier?, @Volatile var elytra: Identifier?, @Volatile var slim: Boolean?, private var complete: Boolean = false) {

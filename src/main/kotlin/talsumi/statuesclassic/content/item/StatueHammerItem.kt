@@ -70,12 +70,4 @@ class StatueHammerItem(settings: Settings) : Item(settings) {
 
         return ActionResult.SUCCESS
     }
-
-    override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack>
-    {
-        if (world.isClient && user.isSneaking)
-            SkinHandler.reset()
-
-        return super.use(world, user, hand)
-    }
 }
