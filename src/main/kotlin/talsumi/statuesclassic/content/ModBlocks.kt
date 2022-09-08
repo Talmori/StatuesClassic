@@ -36,4 +36,5 @@ object ModBlocks: EasyRegisterableHolder<Block>() {
 
     val statue_child = reg(StatueChildBlock(RegUtil.blockSettings(Material.STONE, hardness = 2f).nonOpaque().dropsNothing().luminance(AbstractStatueBlock::luminance)))
     val statue_parent = reg(StatueParentBlock(RegUtil.blockSettings(Material.STONE, hardness = 2f).nonOpaque().dropsNothing().luminance(AbstractStatueBlock::luminance)))
+    val test = reg(Block(RegUtil.blockSettings(Material.STONE, hardness = 1f)))
 }

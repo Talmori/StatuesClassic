@@ -34,6 +34,7 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.DefaultSkinHelper
+import net.minecraft.resource.Resource
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
 import net.minecraft.util.Identifier
@@ -44,6 +45,7 @@ import org.lwjgl.opengl.GL12
 import talsumi.statuesclassic.StatuesClassic
 import java.awt.Color
 import java.io.InputStream
+import java.lang.IllegalStateException
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
@@ -53,6 +55,7 @@ import kotlin.collections.HashMap
 
 object SkinHandler {
 
+    private val missingTexture = Identifier(StatuesClassic.MODID, "textures/block/missing.png")
     private val executor = Util.getMainWorkerExecutor()
     private val cache = HashMap<UUID, SkinData>()
     private val texturedCache = HashMap<Pair<UUID, BlockState>, AsyncHolder>()
@@ -145,17 +148,25 @@ object SkinHandler {
         return (out and 0x00FFFFFF) or (skin and 0xFF000000.toInt())
     }
 
-    private fun streamBlockTexture(block: BlockState): InputStream?
+    private fun streamBlockTexture(block: BlockState): InputStream
     {
         val mc = MinecraftClient.getInstance()
         val sprite = mc.blockRenderManager.getModel(block).particleSprite
-        return try {
-            mc.resourceManager.getResource(Identifier(sprite.id.namespace, "textures/${sprite.id.path}.png")).get().inputStream
+        var resource: Resource? = null
+        try {
+            resource = mc.resourceManager.getResource(Identifier(sprite.id.namespace, "textures/${sprite.id.path}.png")).orElse(null)
+
+            if (resource != null)
+                return resource.inputStream
+
         } catch (e: Exception) {
             e.printStackTrace()
             null
         }
+
+        return (mc.resourceManager.getResource(missingTexture).orElseThrow{ IllegalStateException("Missing texture is missing! What?") }).inputStream
     }
+
     /**
      * Call to get a [SkinData] object. Its values will be null until they have been loaded by the game.
      */
