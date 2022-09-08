@@ -61,10 +61,14 @@ abstract class AbstractStatueBlock(settings: Settings) : Block(settings), Waterl
     fun replace(world: World, pos1: BlockPos, pos2: BlockPos)
     {
         val replacement = StatueHelper.removeStatue(world, pos1)
-        world.removeBlock(pos2, false)
-        world.setBlockState(pos2, replacement)
+        val pos2Valid = world.getBlockState(pos2).block is AbstractStatueBlock
+        if (pos2Valid) {
+            world.removeBlock(pos2, false)
+            world.setBlockState(pos2, replacement)
+        }
         world.setBlockState(pos1, replacement)
     }
+
     override fun getPistonBehavior(state: BlockState?): PistonBehavior = PistonBehavior.BLOCK
 
     override fun getFluidState(state: BlockState): FluidState = if (state.get(Properties.WATERLOGGED)) Fluids.WATER.getStill(false) else super.getFluidState(state)
