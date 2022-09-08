@@ -29,6 +29,7 @@ import net.minecraft.block.Block
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
 import net.minecraft.block.Waterloggable
+import net.minecraft.block.piston.PistonBehavior
 import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.FluidState
 import net.minecraft.fluid.Fluids
@@ -58,11 +59,15 @@ abstract class AbstractStatueBlock(settings: Settings) : Block(settings), Waterl
         defaultState = defaultState.with(lightLevel, 0).with(Properties.WATERLOGGED, false)
     }
 
+    override fun getPistonBehavior(state: BlockState?): PistonBehavior = PistonBehavior.BLOCK
+
     fun replace(world: World, pos1: BlockPos, pos2: BlockPos)
     {
         val replacement = StatueHelper.removeStatue(world, pos1)
+        val pos2Valid = world.getBlockState(pos2).block is AbstractStatueBlock
         world.removeBlock(pos2, false)
-        world.setBlockState(pos2, replacement)
+        if (pos2Valid)
+            world.setBlockState(pos2, replacement)
         world.setBlockState(pos1, replacement)
     }
 
