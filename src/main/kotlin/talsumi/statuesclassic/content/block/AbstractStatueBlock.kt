@@ -24,11 +24,11 @@
 
 package talsumi.statuesclassic.content.block
 
-import io.netty.handler.codec.mqtt.MqttProperties.IntegerProperty
 import net.minecraft.block.Block
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
 import net.minecraft.block.Waterloggable
+import net.minecraft.block.piston.PistonBehavior
 import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.FluidState
 import net.minecraft.fluid.Fluids
@@ -65,8 +65,10 @@ abstract class AbstractStatueBlock(settings: Settings) : Block(settings), Waterl
         world.setBlockState(pos2, replacement)
         world.setBlockState(pos1, replacement)
     }
+    override fun getPistonBehavior(state: BlockState?): PistonBehavior = PistonBehavior.BLOCK
 
     override fun getFluidState(state: BlockState): FluidState = if (state.get(Properties.WATERLOGGED)) Fluids.WATER.getStill(false) else super.getFluidState(state)
+
     override fun getStateForNeighborUpdate(state: BlockState, direction: Direction, neighborState: BlockState, world: WorldAccess, pos: BlockPos, neighborPos: BlockPos): BlockState
     {
         if (state.get(Properties.WATERLOGGED))

@@ -150,7 +150,7 @@ object SkinHandler {
         val mc = MinecraftClient.getInstance()
         val sprite = mc.blockRenderManager.getModel(block).particleSprite
         return try {
-            mc.resourceManager.getResource(Identifier(sprite.id.namespace, "textures/${sprite.id.path}.png")).inputStream
+            mc.resourceManager.getResource(Identifier(sprite.id.namespace, "textures/${sprite.id.path}.png")).get().inputStream
         } catch (e: Exception) {
             e.printStackTrace()
             null

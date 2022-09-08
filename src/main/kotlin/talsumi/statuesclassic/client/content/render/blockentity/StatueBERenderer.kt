@@ -58,7 +58,7 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         init
         {
             val mc = MinecraftClient.getInstance()
-            val ctx = EntityRendererFactory.Context(mc.entityRenderDispatcher, mc.itemRenderer, mc.resourceManager, mc.entityModelLoader, mc.textRenderer)
+            val ctx = EntityRendererFactory.Context(mc.entityRenderDispatcher, mc.itemRenderer, mc.blockRenderManager, mc.entityRenderDispatcher.heldItemRenderer, mc.resourceManager, mc.entityModelLoader, mc.textRenderer)
             statueRenderer = StatuePlayerRenderer(model, ctx, false)
             slimStatueRenderer = StatuePlayerRenderer(slimModel, ctx, true)
         }

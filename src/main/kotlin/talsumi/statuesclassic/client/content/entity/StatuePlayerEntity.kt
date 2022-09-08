@@ -39,7 +39,7 @@ import talsumi.statuesclassic.content.blockentity.StatueBE
  * A fake player entity that delegates to a [StatueBE] for some operations. Used by [StatuePlayerRenderer] for some operations that require an actual player.
  * This entity does not exist in the world!
  */
-class StatuePlayerEntity(val statue: StatueBE, world: ClientWorld, pos: BlockPos, profile: GameProfile) : AbstractClientPlayerEntity(world, profile)
+class StatuePlayerEntity(val statue: StatueBE, world: ClientWorld, pos: BlockPos, profile: GameProfile) : AbstractClientPlayerEntity(world, profile, null)
 {
     init
     {

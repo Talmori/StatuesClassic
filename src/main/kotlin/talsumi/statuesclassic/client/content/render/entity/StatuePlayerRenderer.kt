@@ -40,6 +40,7 @@ import net.minecraft.client.render.entity.model.EntityModel
 import net.minecraft.client.render.entity.model.ModelWithArms
 import net.minecraft.client.render.entity.model.ModelWithHead
 import net.minecraft.client.render.entity.model.PlayerEntityModel
+import net.minecraft.client.render.item.HeldItemRenderer
 import net.minecraft.client.render.model.json.ModelTransformation
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.EquipmentSlot
@@ -62,9 +63,15 @@ import java.util.*
 
 class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFactory.Context?, slim: Boolean) : PlayerEntityRenderer(ctx, slim) {
 
-    val heldItemFeatureRendererOverride = StatueHeldItemFeatureRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>>(this)
-    val capeFeatureRendererOverride = StatueCapeFeatureRenderer(this)
+    private val heldItemFeatureRendererOverride: StatueHeldItemFeatureRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>>
+    private val capeFeatureRendererOverride: StatueCapeFeatureRenderer
 
+    init
+    {
+        val heldItemRenderer = MinecraftClient.getInstance().entityRenderDispatcher.heldItemRenderer
+        heldItemFeatureRendererOverride = StatueHeldItemFeatureRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>>(this, heldItemRenderer)
+        capeFeatureRendererOverride = StatueCapeFeatureRenderer(this)
+    }
     /**
      * Getter for supplying [FeatureRenderer]s with the proper context model.
      */
@@ -139,7 +146,7 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
     }
 }
 
-class StatueHeldItemFeatureRenderer<T, M>(context: FeatureRendererContext<T, M>) : PlayerHeldItemFeatureRenderer<T, M>(context) where T: AbstractClientPlayerEntity, M: EntityModel<T>, M: ModelWithHead, M: ModelWithArms {
+class StatueHeldItemFeatureRenderer<T, M>(context: FeatureRendererContext<T, M>, private val heldItemRenderer: HeldItemRenderer) : PlayerHeldItemFeatureRenderer<T, M>(context, heldItemRenderer) where T: AbstractClientPlayerEntity, M: EntityModel<T>, M: ModelWithHead, M: ModelWithArms {
 
     var rightRotation = 0f
     var leftRotation = 0f
@@ -156,7 +163,7 @@ class StatueHeldItemFeatureRenderer<T, M>(context: FeatureRendererContext<T, M>)
             matrices.translate(0.0, 0.0, -0.5) //Move down arm
             matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(if (arm == Arm.RIGHT) rightRotation else leftRotation)) //Rotate item
             matrices.translate(0.0, 0.125, -0.125) //Centre item on rotation
-            MinecraftClient.getInstance().heldItemRenderer.renderItem(entity, stack, transformationMode, bl, matrices, vertexConsumers, light)
+            heldItemRenderer.renderItem(entity, stack, transformationMode, bl, matrices, vertexConsumers, light)
             matrices.pop()
         }
     }

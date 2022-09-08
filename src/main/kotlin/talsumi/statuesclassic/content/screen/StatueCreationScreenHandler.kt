@@ -27,13 +27,13 @@ package talsumi.statuesclassic.content.screen
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.item.ItemStack
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.NamedScreenHandlerFactory
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableText
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
@@ -72,6 +72,8 @@ class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val 
         return true
     }
 
+    override fun transferSlot(player: PlayerEntity, index: Int): ItemStack = ItemStack.EMPTY
+
     companion object {
         fun makeFactory(player: PlayerEntity, hitFace: Direction, pos: BlockPos, world: World): ExtendedScreenHandlerFactory
         {
@@ -81,7 +83,7 @@ class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val 
                     return StatueCreationScreenHandler(syncId, player.horizontalFacing, hitFace, pos, world)
                 }
                 override fun getDisplayName(): Text {
-                    return TranslatableText("")
+                    return Text.of("")
                 }
                 override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
                     buf.writeBlockPos(pos)

@@ -30,7 +30,6 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableText
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
 import net.minecraft.util.Hand
@@ -44,7 +43,7 @@ class StatueHammerItem(settings: Settings) : Item(settings) {
 
     override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext)
     {
-        tooltip.add(TranslatableText("tooltip.statuesclassic.statue_hammer").formatted(Formatting.GRAY))
+        tooltip.add(Text.translatable("tooltip.statuesclassic.statue_hammer").formatted(Formatting.GRAY))
     }
 
     override fun useOnBlock(ctx: ItemUsageContext): ActionResult

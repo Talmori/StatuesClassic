@@ -26,9 +26,7 @@ package talsumi.statuesclassic.client.content.screen
 
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableText
 import net.minecraft.util.Identifier
 import talsumi.marderlib.screen.EnhancedScreen
 import talsumi.statuesclassic.StatuesClassic
@@ -49,9 +47,9 @@ class StatueEquipmentScreen(handler: StatueEquipmentScreenHandler, inventory: Pl
     {
         backgroundHeight = 179
         leftJoystick = JoystickWidget(7, 67, 51, 14, 14, 176, 0, this,
-            TranslatableText("gui.statuesclassic.joystick.equipment_right_hand"), true, callback = ::joystickChange)
+            Text.translatable("gui.statuesclassic.joystick.equipment_right_hand"), true, callback = ::joystickChange)
         rightJoystick = JoystickWidget(117, 67, 51, 14, 14, 176, 0, this,
-            TranslatableText("gui.statuesclassic.joystick.equipment_left_hand"), callback = ::joystickChange)
+            Text.translatable("gui.statuesclassic.joystick.equipment_left_hand"), callback = ::joystickChange)
 
         addWidgets(leftJoystick, rightJoystick)
 

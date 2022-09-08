@@ -35,6 +35,7 @@ import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
+import net.minecraft.text.TextContent
 import net.minecraft.util.math.Vec2f
 import org.lwjgl.glfw.GLFW
 import talsumi.marderlib.screen.EnhancedScreen
@@ -80,8 +81,7 @@ class JoystickWidget(x: Int, y: Int, width: Int, height: Int, val stickSize: Int
         bufferBuilder.vertex(matrix, xMax, yMax, zOffset.toFloat()).texture(uMax, vMax).next()
         bufferBuilder.vertex(matrix, xMax, yMin, zOffset.toFloat()).texture(uMax, vMin).next()
         bufferBuilder.vertex(matrix, xMin, yMin, zOffset.toFloat()).texture(uMin, vMin).next()
-        bufferBuilder.end()
-        BufferRenderer.draw(bufferBuilder)
+        BufferRenderer.drawWithShader(bufferBuilder.end())
 
         matrices.pop()
         snap.restore()
