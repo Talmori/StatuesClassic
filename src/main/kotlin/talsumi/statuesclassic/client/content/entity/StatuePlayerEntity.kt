@@ -73,7 +73,9 @@ class StatuePlayerEntity(val statue: StatueBE, world: ClientWorld, pos: BlockPos
 
     override fun getOffHandStack(): ItemStack = statue.inventory.getStack(5)
     override fun hasSkinTexture(): Boolean = true
-    override fun getSkinTexture(): Identifier? = statue.playerUuid?.let { SkinHandler.getCachedSkin(it).getSkinOrDefault() }
+    override fun getSkinTexture(): Identifier? = statue.playerUuid?.let {
+        SkinHandler.getCachedSkin(it).getSkinOrDefault()
+    }
     override fun canRenderCapeTexture(): Boolean = statue.hasCape
 
     override fun getCapeTexture(): Identifier? = statue.playerUuid?.let { SkinHandler.getCachedSkin(it).cape ?: null }
@@ -83,4 +85,5 @@ class StatuePlayerEntity(val statue: StatueBE, world: ClientWorld, pos: BlockPos
     override fun getElytraTexture(): Identifier? = statue.playerUuid?.let { SkinHandler.getCachedSkin(it).elytra ?: null }
 
     override fun isPartVisible(modelPart: PlayerModelPart?): Boolean = true
+    override fun getModel(): String = statue.playerUuid?.let { if (SkinHandler.getCachedSkin(it).slim == true) "slim" else "default" } ?: "default"
 }
