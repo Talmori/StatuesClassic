@@ -83,4 +83,6 @@ class StatuePlayerEntity(val statue: StatueBE, world: ClientWorld, pos: BlockPos
     override fun getElytraTexture(): Identifier? = statue.playerUuid?.let { SkinHandler.getCachedSkin(it).elytra ?: null }
 
     override fun isPartVisible(modelPart: PlayerModelPart?): Boolean = true
+
+    override fun getModel(): String = statue.playerUuid?.let { if (SkinHandler.getCachedSkin(it).slim == true) "slim" else "default" } ?: "default"
 }
