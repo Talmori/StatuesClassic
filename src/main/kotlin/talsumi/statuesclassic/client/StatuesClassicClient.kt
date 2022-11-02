@@ -36,6 +36,7 @@ import net.minecraft.resource.ResourceReloader
 import net.minecraft.resource.ResourceType
 import net.minecraft.util.Identifier
 import net.minecraft.util.profiler.Profiler
+import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.client.content.ModClientScreens
 import talsumi.statuesclassic.client.content.render.blockentity.StatueBERenderer
 import talsumi.statuesclassic.client.core.SkinHandler
@@ -48,11 +49,16 @@ import java.util.concurrent.Executor
 @Suppress("UNUSED")
 object StatuesClassicClient: ClientModInitializer {
 
+    var loads = 1
+
     override fun onInitializeClient()
     {
         ClientPacketHandlers.register()
         ModClientScreens.wake()
-        BlockEntityRendererRegistry.register(ModBlockEntities.statue) { StatueBERenderer() }
+        BlockEntityRendererRegistry.register(ModBlockEntities.statue) {
+            StatuesClassic.LOGGER.info("Created StatueBERenderer number ${loads++}")
+            StatueBERenderer()
+        }
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(SkinHandler.ReloadListener)
         registerBlockRenderLayers()
     }
