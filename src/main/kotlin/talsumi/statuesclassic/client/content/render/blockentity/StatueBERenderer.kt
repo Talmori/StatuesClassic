@@ -42,27 +42,13 @@ import talsumi.marderlib.util.RenderUtil
 import talsumi.statuesclassic.client.content.model.StatueModel
 import talsumi.statuesclassic.client.content.render.entity.StatuePlayerRenderer
 import talsumi.statuesclassic.client.core.SkinHandler
+import talsumi.statuesclassic.client.core.StatueModelHolder
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueData
 import java.awt.Color
 import java.util.*
 
 class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
-
-    companion object {
-        internal val model = StatueModel(false)
-        internal val slimModel = StatueModel(true)
-        internal val statueRenderer: StatuePlayerRenderer
-        internal val slimStatueRenderer: StatuePlayerRenderer
-
-        init
-        {
-            val mc = MinecraftClient.getInstance()
-            val ctx = EntityRendererFactory.Context(mc.entityRenderDispatcher, mc.itemRenderer, mc.blockRenderManager, mc.entityRenderDispatcher.heldItemRenderer, mc.resourceManager, mc.entityModelLoader, mc.textRenderer)
-            statueRenderer = StatuePlayerRenderer(model, ctx, false)
-            slimStatueRenderer = StatuePlayerRenderer(slimModel, ctx, true)
-        }
-    }
 
     private fun internalRender(statue: StatueBE?, data: StatueData, model: StatueModel, color: Color, renderer: StatuePlayerRenderer, matrices: MatrixStack, vertex: VertexConsumer, vertexProvider: VertexConsumerProvider, tickDelta: Float, overlay: Int, light: Int)
     {
@@ -107,9 +93,10 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
     {
         matrices.push()
         val snapshot = RenderUtil.getSnapshot()
+        val holder = StatueModelHolder
 
-        val model = if (slim) slimModel else model
-        val renderer = if (slim) slimStatueRenderer else statueRenderer
+        val model = if (slim) holder.slimModel else holder.model
+        val renderer = if (slim) holder.slimStatueRenderer else holder.statueRenderer
         val colorized = statue?.isColoured ?: false
         val texture = (if (!colorized) SkinHandler.getTexturedSkin(uuid, block) else texture)
         val color = MinecraftClient.getInstance().blockColors.getColor(block, null, null, 0).let { if (it > -1) Color(it) else Color.WHITE }
