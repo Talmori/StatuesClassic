@@ -27,8 +27,6 @@ package talsumi.statuesclassic.client.content.model
 import net.minecraft.client.model.Dilation
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.render.entity.model.PlayerEntityModel
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.math.Vec3f
 import talsumi.statuesclassic.core.StatueData
 
 

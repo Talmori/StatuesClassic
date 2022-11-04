@@ -26,9 +26,7 @@ package talsumi.statuesclassic.networking
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs
-import net.minecraft.block.entity.BlockEntity
 import net.minecraft.util.Identifier
-import net.minecraft.util.registry.Registry
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.core.StatueData
 import java.util.*

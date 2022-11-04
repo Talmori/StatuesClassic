@@ -27,7 +27,6 @@ import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder
 import net.minecraft.block.Block
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.client.texture.NativeImage
 import net.minecraft.item.Item
 import net.minecraft.item.ItemGroup
 import net.minecraft.item.ItemStack
@@ -41,7 +40,6 @@ import talsumi.statuesclassic.content.ModBlocks
 import talsumi.statuesclassic.content.ModItems
 import talsumi.statuesclassic.content.ModScreenHandlers
 import talsumi.statuesclassic.networking.ServerPacketHandlers
-import java.nio.ByteBuffer
 
 @Suppress("UNUSED")
 object StatuesClassic: ModInitializer {

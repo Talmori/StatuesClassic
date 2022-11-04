@@ -27,7 +27,6 @@ package talsumi.statuesclassic.client.core
 import com.mojang.authlib.GameProfile
 import com.mojang.authlib.minecraft.MinecraftProfileTexture
 import com.mojang.authlib.minecraft.MinecraftProfileTexture.Type
-import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener
 import net.minecraft.block.BlockState
 import net.minecraft.client.MinecraftClient
@@ -36,22 +35,15 @@ import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.DefaultSkinHelper
 import net.minecraft.resource.Resource
 import net.minecraft.resource.ResourceManager
-import net.minecraft.resource.ResourceReloader
 import net.minecraft.util.Identifier
 import net.minecraft.util.Util
-import net.minecraft.util.profiler.Profiler
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL12
 import talsumi.statuesclassic.StatuesClassic
 import java.awt.Color
 import java.io.InputStream
-import java.lang.IllegalStateException
 import java.util.*
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
 import javax.imageio.ImageIO
-import kotlin.collections.HashMap
 
 object SkinHandler {
 
@@ -60,6 +52,9 @@ object SkinHandler {
     private val cache = HashMap<UUID, SkinData>()
     private val texturedCache = HashMap<Pair<UUID, BlockState>, AsyncHolder>()
     private val baseUUID = UUID.randomUUID()
+
+    private val defaultSkinTexture = Identifier("textures/entity/steve.png")
+    private val slimSkinTexture = Identifier("textures/entity/alex.png")
 
     fun reset()
     {
@@ -85,9 +80,11 @@ object SkinHandler {
         }
     }
 
+    //TODO: In the future, maybe make > 64x64 skins out of > 16x16 textures.
     private fun makeTexturedSkin(baseSkin: Identifier, uuid: UUID, block: BlockState, holder: AsyncHolder)
     {
         val sTime = System.currentTimeMillis()
+        var baseSkin = baseSkin
 
         val mc = MinecraftClient.getInstance()
         val textures = mc.textureManager
@@ -102,8 +99,29 @@ object SkinHandler {
         val blockSize = height.coerceAtMost(width)
         val sampleResolution = 16.coerceAtMost(blockSize)
 
+        //If we are using a default (steve/alex) skin, use our guaranteed 64x64 skin instead, or it will crash badly.
+        when (baseSkin) {
+            defaultSkinTexture -> baseSkin = TrueDefaultSkins.default_default_skin
+            slimSkinTexture -> baseSkin = TrueDefaultSkins.default_slim_skin
+        }
+
         //Read in skin texture
         textures.getTexture(baseSkin).bindTexture()
+        val skinWidth = GL12.glGetTexLevelParameteri(GL12.GL_TEXTURE_2D, 0, GL12.GL_TEXTURE_WIDTH)
+        val skinHeight = GL12.glGetTexLevelParameteri(GL12.GL_TEXTURE_2D, 0, GL12.GL_TEXTURE_HEIGHT)
+
+        if (skinWidth != 64 || skinHeight != 64) {
+            //Just in case a mod changes the texture locations for default skins (why?) and the skin isn't 64x64, fallback to our default skin.
+            textures.getTexture(TrueDefaultSkins.default_default_skin).bindTexture()
+
+            val skinWidth = GL12.glGetTexLevelParameteri(GL12.GL_TEXTURE_2D, 0, GL12.GL_TEXTURE_WIDTH)
+            val skinHeight = GL12.glGetTexLevelParameteri(GL12.GL_TEXTURE_2D, 0, GL12.GL_TEXTURE_HEIGHT)
+
+            //If it turns out the guaranteed 64x64 skin *isn't* guaranteed to be 64x64, just crash, or it will cause an exception_access_violation and probably not even leave a crash report!
+            if (skinWidth != 64 || skinHeight != 64)
+                throw IllegalStateException("Default skin dimensions [width=${skinWidth}, height=${skinHeight}] are not equal to [width=64, height=64]! Check the textures under 'assets/statuesclassic/textures/entity'!")
+        }
+
         val pixelsBuffer = BufferUtils.createIntBuffer(64 * 64)
         GL12.glGetTexImage(GL12.GL_TEXTURE_2D, 0, GL12.GL_RGBA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, pixelsBuffer)
         val skinPixels = IntArray(64 * 64)

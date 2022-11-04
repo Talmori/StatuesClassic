@@ -26,7 +26,6 @@ package talsumi.statuesclassic.content.block
 
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
-import net.minecraft.block.piston.PistonBehavior
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
@@ -35,7 +34,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
-import talsumi.statuesclassic.core.StatueHelper
 
 class StatueChildBlock(settings: Settings) : AbstractStatueBlock(settings) {
 

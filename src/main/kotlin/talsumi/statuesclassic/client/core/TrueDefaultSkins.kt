@@ -24,23 +24,11 @@
 
 package talsumi.statuesclassic.client.core
 
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.render.entity.EntityRendererFactory
-import talsumi.statuesclassic.client.content.model.StatueModel
-import talsumi.statuesclassic.client.content.render.entity.StatuePlayerRenderer
+import net.minecraft.util.Identifier
+import talsumi.statuesclassic.StatuesClassic
 
-object StatueModelHolder {
+object TrueDefaultSkins {
 
-    val model = StatueModel(false)
-    val slimModel = StatueModel(true)
-    val statueRenderer: StatuePlayerRenderer
-    val slimStatueRenderer: StatuePlayerRenderer
-
-    init
-    {
-        val mc = MinecraftClient.getInstance()
-        val ctx = EntityRendererFactory.Context(mc.entityRenderDispatcher, mc.itemRenderer, mc.blockRenderManager, mc.entityRenderDispatcher.heldItemRenderer, mc.resourceManager, mc.entityModelLoader, mc.textRenderer)
-        statueRenderer = StatuePlayerRenderer(model, ctx, false)
-        slimStatueRenderer = StatuePlayerRenderer(slimModel, ctx, true)
-    }
+    val default_default_skin = Identifier(StatuesClassic.MODID, "textures/entity/default_steve.png")
+    val default_slim_skin = Identifier(StatuesClassic.MODID, "textures/entity/default_alex.png")
 }

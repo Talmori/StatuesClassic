@@ -30,7 +30,6 @@ import net.minecraft.network.PacketByteBuf
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayNetworkHandler
 import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.util.registry.Registry
 import talsumi.marderlib.mixininterfaces.MarderLibPlayerListenerGrabber
 import talsumi.marderlib.mixins.MarderLibScreenHandlerAccessor
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler

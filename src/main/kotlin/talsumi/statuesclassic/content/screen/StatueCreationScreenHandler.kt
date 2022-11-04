@@ -29,7 +29,6 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.NamedScreenHandlerFactory
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.server.network.ServerPlayerEntity
@@ -39,8 +38,8 @@ import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import talsumi.marderlib.screenhandler.EnhancedScreenHandler
 import talsumi.statuesclassic.content.ModScreenHandlers
-import talsumi.statuesclassic.core.StatueHelper
 import talsumi.statuesclassic.core.StatueData
+import talsumi.statuesclassic.core.StatueHelper
 import java.util.*
 
 class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val hitFace: Direction?, val playerFacing: Direction?, val parentPos: BlockPos, val world: World?) : EnhancedScreenHandler(type, syncId) {

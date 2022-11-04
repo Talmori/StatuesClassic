@@ -30,7 +30,9 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.*
+import net.minecraft.item.BlockItem
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.Hand
@@ -45,9 +47,9 @@ import talsumi.marderlib.util.ItemStackUtil
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.content.ModBlockEntities
 import talsumi.statuesclassic.content.ModItems
-import talsumi.statuesclassic.core.StatuePlayerEntityFactory
-import talsumi.statuesclassic.core.StatueHelper
 import talsumi.statuesclassic.core.StatueData
+import talsumi.statuesclassic.core.StatueHelper
+import talsumi.statuesclassic.core.StatuePlayerEntityFactory
 import java.util.*
 
 class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.statue, pos, state), IUpdatableBlockEntity {

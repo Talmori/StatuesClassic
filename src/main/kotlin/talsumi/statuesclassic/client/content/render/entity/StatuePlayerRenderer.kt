@@ -50,11 +50,9 @@ import net.minecraft.item.Items
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
 import net.minecraft.util.Arm
-import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3f
 import net.minecraft.world.RaycastContext
 import talsumi.statuesclassic.client.content.model.StatueModel
-import talsumi.statuesclassic.client.core.SkinHandler
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.core.StatueHelper

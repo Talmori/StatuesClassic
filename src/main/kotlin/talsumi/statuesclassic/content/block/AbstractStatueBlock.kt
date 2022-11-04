@@ -29,11 +29,8 @@ import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
 import net.minecraft.block.Waterloggable
 import net.minecraft.block.piston.PistonBehavior
-import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.FluidState
 import net.minecraft.fluid.Fluids
-import net.minecraft.item.ItemStack
-import net.minecraft.sound.SoundEvent
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.IntProperty
 import net.minecraft.state.property.Properties
@@ -43,7 +40,6 @@ import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
 import talsumi.statuesclassic.core.StatueHelper
-import java.util.*
 
 abstract class AbstractStatueBlock(settings: Settings) : Block(settings), Waterloggable {
 

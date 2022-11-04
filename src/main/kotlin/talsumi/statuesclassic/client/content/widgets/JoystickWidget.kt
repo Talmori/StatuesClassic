@@ -25,9 +25,7 @@
 package talsumi.statuesclassic.client.content.widgets
 
 import com.mojang.blaze3d.systems.RenderSystem
-import com.sun.jna.platform.KeyboardUtils
 import net.minecraft.client.MinecraftClient
-import net.minecraft.client.input.KeyboardInput
 import net.minecraft.client.render.BufferRenderer
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.Tessellator
@@ -35,9 +33,7 @@ import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
-import net.minecraft.text.TextContent
 import net.minecraft.util.math.Vec2f
-import org.lwjgl.glfw.GLFW
 import talsumi.marderlib.screen.EnhancedScreen
 import talsumi.marderlib.screen.widget.BaseWidget
 import talsumi.marderlib.util.RenderUtil
