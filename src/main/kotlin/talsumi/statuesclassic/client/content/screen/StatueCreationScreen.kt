@@ -29,6 +29,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.DrawableHelper
 import net.minecraft.client.gui.widget.TextFieldWidget
 import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.OverlayTexture
@@ -223,6 +224,9 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
         //Render ui
         super.drawBackground(matrices, delta, mouseX, mouseY)
+
+        //Draw text
+        drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, Text.translatable("gui.statuesclassic.username"), x+99, y+125, 16777215)
     }
 
     private fun drawModel(matrices: MatrixStack, size: Float, x: Double, y: Double, mouseX: Int, mouseY: Int, delta: Float)

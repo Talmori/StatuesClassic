@@ -40,9 +40,11 @@ import net.minecraft.util.Util
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL12
 import talsumi.statuesclassic.StatuesClassic
+import talsumi.statuesclassic.mixins.MinecraftClientAccessor
 import java.awt.Color
 import java.io.InputStream
 import java.util.*
+import java.util.concurrent.Executors
 import javax.imageio.ImageIO
 
 object SkinHandler {
@@ -50,8 +52,10 @@ object SkinHandler {
     private val missingTexture = Identifier(StatuesClassic.MODID, "textures/block/missing.png")
     private val executor = Util.getMainWorkerExecutor()
     private val cache = HashMap<UUID, SkinData>()
-    private val texturedCache = HashMap<Pair<UUID, BlockState>, AsyncHolder>()
+    private val texturedCache = HashMap<Pair<UUID, BlockState>?, AsyncHolder>()
     private val baseUUID = UUID.randomUUID()
+
+    private val processing = Executors.newCachedThreadPool()
 
     private val defaultSkinTexture = Identifier("textures/entity/steve.png")
     private val slimSkinTexture = Identifier("textures/entity/alex.png")
@@ -64,20 +68,104 @@ object SkinHandler {
 
     /**
      * Creates and returns a skin for [uuid], textured to look like [block]. This will return null until the skin has been created.
+     * If [uuid] is null, the skin is replaced by the default one.
      */
     fun getTexturedSkin(uuid: UUID?, block: BlockState): Identifier?
     {
-        val key = Pair(uuid ?: baseUUID, block)
+        val key = uuid?.let { Pair(uuid, block) }
+
+        return if (texturedCache.containsKey(key)) {
+            texturedCache[key]?.tex
+        } else {
+            val holder = AsyncHolder(null)
+
+            if (uuid == null) {
+                makeTexturedSkin(DefaultSkinHelper.getTexture(), baseUUID, block, holder)
+            } else {
+                processing.execute {
+                    var firstSleep = false
+
+                    while (true) {
+                        val skin = getCachedSkin(uuid).skin
+
+                        if (skin == null) {
+                            Thread.sleep(if (firstSleep) 20 else 250)
+                            firstSleep = true
+                        }
+                        else {
+                            val mc = MinecraftClient.getInstance() as MinecraftClientAccessor
+
+                            //makeTexturedSkin needs to be run on the render thread.
+                            mc.renderTaskQueue.add {
+                                makeTexturedSkin(skin, uuid, block, holder)
+                            }
+
+                            break
+                        }
+                    }
+                }
+            }
+
+            texturedCache[key] = holder
+            holder.tex
+        }
+
+        /*if (uuid == null) {
+            //If cache contains the key, the texture is either processing or created.
+            if (texturedCache.containsKey(key)) {
+                return texturedCache[key]?.tex
+            }
+            else {
+                val holder = AsyncHolder(null)
+                makeTexturedSkin(DefaultSkinHelper.getTexture(), baseUUID, block, holder)
+                texturedCache[key] = holder
+                return holder.tex
+            }
+        }
+        else {
+            return if (texturedCache.containsKey(key)) {
+                texturedCache[key]?.tex
+            } else {
+                val holder = AsyncHolder(null)
+                //This will fill [holder] with the skin when it is ready, some time in the future.
+                getCachedSkin(uuid, Callback() { makeTexturedSkin(it.skin!!, baseUUID, block, holder) })
+                texturedCache[key] = holder
+                holder.tex
+            }
+        }*/
+        /*val key = Pair(uuid ?: baseUUID, block)
         if (!texturedCache.containsKey(key)) {
             val holder = AsyncHolder(null)
+
             val base = (if (uuid != null) getCachedSkin(uuid)?.skin else DefaultSkinHelper.getTexture()) ?: return null
             makeTexturedSkin(base, uuid ?: baseUUID, block, holder)
+
+
             texturedCache[key] = holder
             return holder.tex
         }
         else {
             return texturedCache[key]!!.tex
+        }*/
+        /*
+        val key = Pair(uuid ?: baseUUID, block)
+        if (!texturedCache.containsKey(key)) {
+            val data = if (uuid != null) makeTexturedSkin() getCachedSkin(uuid) else return null
+
+            if (data)
+            if (data.complete != null && uuid != null) {
+                val holder = AsyncHolder(null)
+                makeTexturedSkin(base, uuid, block, holder)
+                texturedCache[key] = holder
+                return holder.tex
+            }
+
+            return null
         }
+        else {
+            return texturedCache[key]!!.tex
+        }
+         */
     }
 
     //TODO: In the future, maybe make > 64x64 skins out of > 16x16 textures.
@@ -187,6 +275,7 @@ object SkinHandler {
 
     /**
      * Call to get a [SkinData] object. Its values will be null until they have been loaded by the game.
+     * Note: [callback] is designed for use in situations where this method will only be called once, not repeatedly.
      */
     fun getCachedSkin(uuid: UUID): SkinData
     {
@@ -205,7 +294,8 @@ object SkinHandler {
             return data
         }
         else {
-            return cache[uuid]!!
+            val cached = cache[uuid]!!
+            return cached
         }
     }
 
@@ -248,5 +338,12 @@ object SkinHandler {
         override fun toString(): String = "SkinData(skin=$skin, cape=$cape, elytra=$elytra, slim=$slim)"
     }
 
-    class AsyncHolder(var tex: Identifier?)
+    class AsyncHolder(@Volatile var tex: Identifier?)
+
+
+    class Callback(val function: (SkinData) -> Unit) {
+        @Volatile var complete = false
+        @Volatile var processing = false
+        fun foundSkin(data: SkinData) = function.invoke(data)
+    }
 }
