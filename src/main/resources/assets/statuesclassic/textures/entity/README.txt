@@ -1,0 +1,1 @@
+A note to texture pack creators: Do not change the default skin dimensions! They are supposed to be 64x64, and will cause issues if changed!

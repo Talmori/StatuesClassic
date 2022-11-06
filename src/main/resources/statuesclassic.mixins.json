@@ -8,5 +8,7 @@
   "mixins": [
   ],
   "client": [
+    "StatuesClassicMinecraftClientAccessor",
+    "StatuesClassicPlayerEntityRendererInvoker"
   ]
 }

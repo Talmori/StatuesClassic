@@ -16,5 +16,6 @@
   "gui.statuesclassic.joystick.creation_right_leg": "Right Leg",
   "gui.statuesclassic.joystick.creation_body": "Body",
   "gui.statuesclassic.joystick.equipment_left_hand": "Left Hand",
-  "gui.statuesclassic.joystick.equipment_right_hand": "Right Hand"
+  "gui.statuesclassic.joystick.equipment_right_hand": "Right Hand",
+  "gui.statuesclassic.username": "Username"
 }
