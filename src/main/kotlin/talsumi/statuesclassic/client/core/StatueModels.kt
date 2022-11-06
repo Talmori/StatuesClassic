@@ -45,20 +45,29 @@ object StatueModels {
         val mc = MinecraftClient.getInstance()
         val ctx = EntityRendererFactory.Context(mc.entityRenderDispatcher, mc.itemRenderer, mc.blockRenderManager, mc.entityRenderDispatcher.heldItemRenderer, mc.resourceManager, mc.entityModelLoader, mc.textRenderer)
 
-        model = PlayerEntityModel(PlayerEntityModel.getTexturedModelData(Dilation.NONE, false).root.createPart(64, 64), false)
-        slimModel = PlayerEntityModel(PlayerEntityModel.getTexturedModelData(Dilation.NONE, true).root.createPart(64, 64), true)
-        model.child = false
-        slimModel.child = false
+        model = object: PlayerEntityModel<StatuePlayerEntity>(getTexturedModelData(Dilation.NONE, false).root.createPart(64, 64), false) {
+            init {
 
-        statueRenderer = object: StatuePlayerRenderer(model, ctx, false) {
+            }
+        }
+        slimModel = object: PlayerEntityModel<StatuePlayerEntity>(getTexturedModelData(Dilation.NONE, true).root.createPart(64, 64), true) {
+            init {
+
+            }
+        }
+
+        statueRenderer = object: StatuePlayerRenderer(ctx, false) {
             override fun getModel(): PlayerEntityModel<AbstractClientPlayerEntity> = model
         }
-        slimStatueRenderer = object: StatuePlayerRenderer(slimModel, ctx, true) {
+        slimStatueRenderer = object: StatuePlayerRenderer(ctx, true) {
             override fun getModel(): PlayerEntityModel<AbstractClientPlayerEntity> = slimModel as PlayerEntityModel<AbstractClientPlayerEntity>
         }
+
+        model.child = false
+        slimModel.child = false
     }
 
-    fun setAngles(model: PlayerEntityModel<StatuePlayerEntity>, data: StatueData)
+    fun setAngles(model: PlayerEntityModel<*>, data: StatueData)
     {
         //Head
         model.head.setAngles(data.headRaise, data.headRotate, 0f)
