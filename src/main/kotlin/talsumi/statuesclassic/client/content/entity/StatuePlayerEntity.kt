@@ -26,6 +26,7 @@ package talsumi.statuesclassic.client.content.entity
 
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.network.AbstractClientPlayerEntity
+import net.minecraft.client.network.PlayerListEntry
 import net.minecraft.client.render.entity.PlayerModelPart
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.EquipmentSlot
@@ -73,9 +74,8 @@ class StatuePlayerEntity(val statue: StatueBE, world: ClientWorld, pos: BlockPos
 
     override fun getOffHandStack(): ItemStack = statue.inventory.getStack(5)
     override fun hasSkinTexture(): Boolean = true
-    override fun getSkinTexture(): Identifier? = statue.playerUuid?.let {
-        SkinHandler.getCachedSkin(it).getSkinOrDefault()
-    }
+    override fun getSkinTexture(): Identifier? = statue.playerUuid?.let { SkinHandler.getCachedSkin(it).getSkinOrDefault() }
+
     override fun canRenderCapeTexture(): Boolean = statue.hasCape
 
     override fun getCapeTexture(): Identifier? = statue.playerUuid?.let { SkinHandler.getCachedSkin(it).cape ?: null }

@@ -22,25 +22,16 @@
  * SOFTWARE.
  */
 
-package talsumi.statuesclassic.client.core
+package talsumi.statuesclassic.mixins;
 
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.render.entity.EntityRendererFactory
-import talsumi.statuesclassic.client.content.model.StatueModel
-import talsumi.statuesclassic.client.content.render.entity.StatuePlayerRenderer
+import net.minecraft.client.MinecraftClient;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-object StatueModelHolder {
+import java.util.Queue;
 
-    val model = StatueModel(false)
-    val slimModel = StatueModel(true)
-    val statueRenderer: StatuePlayerRenderer
-    val slimStatueRenderer: StatuePlayerRenderer
-
-    init
-    {
-        val mc = MinecraftClient.getInstance()
-        val ctx = EntityRendererFactory.Context(mc.entityRenderDispatcher, mc.itemRenderer, mc.blockRenderManager, mc.entityRenderDispatcher.heldItemRenderer, mc.resourceManager, mc.entityModelLoader, mc.textRenderer)
-        statueRenderer = StatuePlayerRenderer(model, ctx, false)
-        slimStatueRenderer = StatuePlayerRenderer(slimModel, ctx, true)
-    }
+@Mixin(MinecraftClient.class)
+public interface StatuesClassicMinecraftClientAccessor {
+    @Accessor
+    Queue<Runnable> getRenderTaskQueue();
 }

@@ -6,8 +6,9 @@
     "defaultRequire": 1
   },
   "mixins": [
-    "MinecraftClientAccessor"
   ],
   "client": [
+    "StatuesClassicMinecraftClientAccessor",
+    "StatuesClassicPlayerEntityRendererInvoker"
   ]
 }

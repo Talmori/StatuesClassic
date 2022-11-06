@@ -40,7 +40,7 @@ import net.minecraft.util.Util
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL12
 import talsumi.statuesclassic.StatuesClassic
-import talsumi.statuesclassic.mixins.MinecraftClientAccessor
+import talsumi.statuesclassic.mixins.StatuesClassicMinecraftClientAccessor
 import java.awt.Color
 import java.io.InputStream
 import java.util.*
@@ -52,7 +52,7 @@ object SkinHandler {
     private val missingTexture = Identifier(StatuesClassic.MODID, "textures/block/missing.png")
     private val executor = Util.getMainWorkerExecutor()
     private val cache = HashMap<UUID, SkinData>()
-    private val texturedCache = HashMap<Pair<UUID, BlockState>?, AsyncHolder>()
+    private val texturedCache = HashMap<Pair<UUID?, BlockState>, AsyncHolder>()
     private val baseUUID = UUID.randomUUID()
 
     private val processing = Executors.newCachedThreadPool()
@@ -72,7 +72,7 @@ object SkinHandler {
      */
     fun getTexturedSkin(uuid: UUID?, block: BlockState): Identifier?
     {
-        val key = uuid?.let { Pair(uuid, block) }
+        val key = Pair(uuid, block)
 
         return if (texturedCache.containsKey(key)) {
             texturedCache[key]?.tex
@@ -80,26 +80,31 @@ object SkinHandler {
             val holder = AsyncHolder(null)
 
             if (uuid == null) {
-                makeTexturedSkin(DefaultSkinHelper.getTexture(), baseUUID, block, holder)
+                makeMixedSkin(DefaultSkinHelper.getTexture(), baseUUID, block, holder)
             } else {
                 processing.execute {
-                    var firstSleep = false
+                    val mc = MinecraftClient.getInstance() as StatuesClassicMinecraftClientAccessor
+                    var firstSleep = true
+                    var tries = 10
 
                     while (true) {
                         val skin = getCachedSkin(uuid).skin
 
+                        if (tries <= 0) {
+                            mc.renderTaskQueue.add { makeMixedSkin(DefaultSkinHelper.getTexture(), uuid, block, holder) }
+                            StatuesClassic.LOGGER.warn("Could not get skin for $uuid in time for mixing. Aborting and using the default skin.")
+                            break
+                        }
+
+
                         if (skin == null) {
                             Thread.sleep(if (firstSleep) 20 else 250)
-                            firstSleep = true
+                            firstSleep = false
+                            tries--
                         }
                         else {
-                            val mc = MinecraftClient.getInstance() as MinecraftClientAccessor
-
                             //makeTexturedSkin needs to be run on the render thread.
-                            mc.renderTaskQueue.add {
-                                makeTexturedSkin(skin, uuid, block, holder)
-                            }
-
+                            mc.renderTaskQueue.add { makeMixedSkin(skin, uuid, block, holder) }
                             break
                         }
                     }
@@ -169,7 +174,7 @@ object SkinHandler {
     }
 
     //TODO: In the future, maybe make > 64x64 skins out of > 16x16 textures.
-    private fun makeTexturedSkin(baseSkin: Identifier, uuid: UUID, block: BlockState, holder: AsyncHolder)
+    private fun makeMixedSkin(baseSkin: Identifier, uuid: UUID, block: BlockState, holder: AsyncHolder)
     {
         val sTime = System.currentTimeMillis()
         var baseSkin = baseSkin

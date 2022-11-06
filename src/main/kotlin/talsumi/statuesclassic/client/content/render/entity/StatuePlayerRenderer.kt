@@ -52,14 +52,17 @@ import net.minecraft.text.Text
 import net.minecraft.util.Arm
 import net.minecraft.util.math.Vec3f
 import net.minecraft.world.RaycastContext
-import talsumi.statuesclassic.client.content.model.StatueModel
+import talsumi.statuesclassic.client.compat.SkippedFeatureRenderers
+import talsumi.statuesclassic.client.content.entity.StatuePlayerEntity
+import talsumi.statuesclassic.client.core.StatueModels
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.core.StatueHelper
+import talsumi.statuesclassic.mixins.StatuesClassicPlayerEntityRendererInvoker
 import java.awt.Color
 import java.util.*
 
-class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFactory.Context?, slim: Boolean) : PlayerEntityRenderer(ctx, slim) {
+abstract class StatuePlayerRenderer(val statueModel: PlayerEntityModel<StatuePlayerEntity>, ctx: EntityRendererFactory.Context?, slim: Boolean) : PlayerEntityRenderer(ctx, slim) {
 
     private val heldItemFeatureRendererOverride: StatueHeldItemFeatureRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>>
     private val capeFeatureRendererOverride: StatueCapeFeatureRenderer
@@ -70,15 +73,23 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
         heldItemFeatureRendererOverride = StatueHeldItemFeatureRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>>(this, heldItemRenderer)
         capeFeatureRendererOverride = StatueCapeFeatureRenderer(this)
     }
+
     /**
      * Getter for supplying [FeatureRenderer]s with the proper context model.
      */
-    override fun getModel(): PlayerEntityModel<AbstractClientPlayerEntity> = statueModel
+    //This method is defined in [StatueModels], as feature renderers are created before [model] is set, causing weirdness.
+    abstract override fun getModel(): PlayerEntityModel<AbstractClientPlayerEntity>
 
     fun render(statue: StatueBE, data: StatueData, color: Color, tickDelta: Float, matrices: MatrixStack, vertex: VertexConsumer, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
     {
         //Render the statue model.
         matrices.push()
+
+        val invoker = this as StatuesClassicPlayerEntityRendererInvoker
+        val player = statue.clientFakePlayer as? AbstractClientPlayerEntity ?: return
+
+        //StatueModels.setAngles(statueModel, data)
+        //invoker.invokeSetModelPose(player)
 
         //Rotate to match statue facing
         val facing = statue.cachedState.get(Properties.HORIZONTAL_FACING)
@@ -97,8 +108,9 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
         statueModel.render(matrices, vertex, light, overlay, (color.red / 255f), (color.green / 255f), (color.blue / 255f), color.alpha / 255f)
 
         //Render features
-        val player = statue.clientFakePlayer as? AbstractClientPlayerEntity ?: return
         for (feature in features) {
+            if (SkippedFeatureRenderers.isSkipped(feature.javaClass)) continue
+
             var feature = feature
 
             //Ignore vanilla's held item renderer and use our own that supports rotation
