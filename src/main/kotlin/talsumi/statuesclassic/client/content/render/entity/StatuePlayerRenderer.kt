@@ -40,6 +40,7 @@ import net.minecraft.client.render.entity.model.EntityModel
 import net.minecraft.client.render.entity.model.ModelWithArms
 import net.minecraft.client.render.entity.model.ModelWithHead
 import net.minecraft.client.render.entity.model.PlayerEntityModel
+import net.minecraft.client.render.item.HeldItemRenderer
 import net.minecraft.client.render.model.json.ModelTransformation
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.EquipmentSlot
@@ -49,31 +50,49 @@ import net.minecraft.item.Items
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
 import net.minecraft.util.Arm
-import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3f
 import net.minecraft.world.RaycastContext
-import talsumi.statuesclassic.client.content.model.StatueModel
-import talsumi.statuesclassic.client.core.SkinHandler
+import talsumi.statuesclassic.client.compat.SkippedFeatureRenderers
+import talsumi.statuesclassic.client.content.entity.StatuePlayerEntity
+import talsumi.statuesclassic.client.core.StatueModels
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueData
 import talsumi.statuesclassic.core.StatueHelper
+import talsumi.statuesclassic.mixins.StatuesClassicPlayerEntityRendererInvoker
 import java.awt.Color
 import java.util.*
 
-class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFactory.Context?, slim: Boolean) : PlayerEntityRenderer(ctx, slim) {
+abstract class StatuePlayerRenderer(ctx: EntityRendererFactory.Context?, slim: Boolean) : PlayerEntityRenderer(ctx, slim) {
 
-    val heldItemFeatureRendererOverride = StatueHeldItemFeatureRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>>(this)
-    val capeFeatureRendererOverride = StatueCapeFeatureRenderer(this)
+    private val heldItemFeatureRendererOverride: StatueHeldItemFeatureRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>>
+    private val capeFeatureRendererOverride: StatueCapeFeatureRenderer
+
+    init
+    {
+        val heldItemRenderer = MinecraftClient.getInstance().heldItemRenderer
+        heldItemFeatureRendererOverride = StatueHeldItemFeatureRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>>(this, heldItemRenderer)
+        capeFeatureRendererOverride = StatueCapeFeatureRenderer(this)
+    }
 
     /**
      * Getter for supplying [FeatureRenderer]s with the proper context model.
      */
-    override fun getModel(): PlayerEntityModel<AbstractClientPlayerEntity> = statueModel
+    //This method is defined in [StatueModels], as feature renderers are created before [model] is set, causing weirdness.
+    abstract override fun getModel(): PlayerEntityModel<AbstractClientPlayerEntity>
 
     fun render(statue: StatueBE, data: StatueData, color: Color, tickDelta: Float, matrices: MatrixStack, vertex: VertexConsumer, vertexProvider: VertexConsumerProvider, light: Int, overlay: Int)
     {
-        //Render the statue model.
         matrices.push()
+        val model = getModel()
+        model.child = false
+        val invoker = this as StatuesClassicPlayerEntityRendererInvoker
+        val player = statue.clientFakePlayer as? AbstractClientPlayerEntity ?: return
+
+        //StatueModels.setAngles(statueModel, data)
+        //invoker.invokeSetModelPose(player)
+
+        StatueModels.setAngles(getModel(), data)
+        //StatueModels.setAngles(model, data)
 
         //Rotate to match statue facing
         val facing = statue.cachedState.get(Properties.HORIZONTAL_FACING)
@@ -89,11 +108,13 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
         matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(data.masterRaise))
         matrices.translate(0.0, -1.0, 0.0)
 
-        statueModel.render(matrices, vertex, light, overlay, (color.red / 255f), (color.green / 255f), (color.blue / 255f), color.alpha / 255f)
+        matrices.push()
+        model.render(matrices, vertex, light, overlay, (color.red / 255f), (color.green / 255f), (color.blue / 255f), color.alpha / 255f)
+        matrices.pop()
 
         //Render features
-        val player = statue.clientFakePlayer as? AbstractClientPlayerEntity ?: return
         for (feature in features) {
+            //if (SkippedFeatureRenderers.isSkipped(feature.javaClass)) continue
             var feature = feature
 
             //Ignore vanilla's held item renderer and use our own that supports rotation
@@ -139,7 +160,7 @@ class StatuePlayerRenderer(val statueModel: StatueModel, ctx: EntityRendererFact
     }
 }
 
-class StatueHeldItemFeatureRenderer<T, M>(context: FeatureRendererContext<T, M>) : PlayerHeldItemFeatureRenderer<T, M>(context) where T: AbstractClientPlayerEntity, M: EntityModel<T>, M: ModelWithHead, M: ModelWithArms {
+class StatueHeldItemFeatureRenderer<T, M>(context: FeatureRendererContext<T, M>, private val heldItemRenderer: HeldItemRenderer) : PlayerHeldItemFeatureRenderer<T, M>(context) where T: AbstractClientPlayerEntity, M: EntityModel<T>, M: ModelWithHead, M: ModelWithArms {
 
     var rightRotation = 0f
     var leftRotation = 0f
@@ -154,9 +175,11 @@ class StatueHeldItemFeatureRenderer<T, M>(context: FeatureRendererContext<T, M>)
             val bl = arm == Arm.LEFT
             matrices.translate(((if (bl) -1 else 1).toFloat() / 16.0f).toDouble(), 0.0, 0.0) //Centre on arm
             matrices.translate(0.0, 0.0, -0.5) //Move down arm
-            matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(if (arm == Arm.RIGHT) rightRotation else leftRotation)) //Rotate item
+            val rotation = if (arm == Arm.RIGHT) rightRotation else leftRotation
+
+            matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(if (rotation < 0) rotation * 2 else rotation)) //Rotate item
             matrices.translate(0.0, 0.125, -0.125) //Centre item on rotation
-            MinecraftClient.getInstance().heldItemRenderer.renderItem(entity, stack, transformationMode, bl, matrices, vertexConsumers, light)
+            heldItemRenderer.renderItem(entity, stack, transformationMode, bl, matrices, vertexConsumers, light)
             matrices.pop()
         }
     }

@@ -25,18 +25,17 @@
 package talsumi.statuesclassic.client.content.screen
 
 import com.mojang.authlib.GameProfile
-import com.mojang.authlib.minecraft.MinecraftProfileTexture
 import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gui.DrawableHelper
 import net.minecraft.client.gui.widget.TextFieldWidget
 import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.util.DefaultSkinHelper
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Identifier
@@ -48,9 +47,8 @@ import talsumi.statuesclassic.client.content.widgets.ButtonWidget
 import talsumi.statuesclassic.client.content.widgets.JoystickWidget
 import talsumi.statuesclassic.client.core.SkinHandler
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
-import talsumi.statuesclassic.core.StatueHelper
 import talsumi.statuesclassic.core.StatueData
-import talsumi.statuesclassic.core.UUIDLookups
+import talsumi.statuesclassic.core.StatueHelper
 import talsumi.statuesclassic.networking.ClientPacketsOut
 import java.util.*
 
@@ -227,6 +225,9 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
         //Render ui
         super.drawBackground(matrices, delta, mouseX, mouseY)
+
+        //Draw text
+        drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, TranslatableText("gui.statuesclassic.username"), x+99, y+125, 16777215)
     }
 
     private fun drawModel(matrices: MatrixStack, size: Float, x: Double, y: Double, mouseX: Int, mouseY: Int, delta: Float)

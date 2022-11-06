@@ -27,22 +27,19 @@ package talsumi.statuesclassic.client.content.render.blockentity
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
-import net.minecraft.client.color.block.BlockColorProvider
-import net.minecraft.client.color.block.BlockColors
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.render.VertexConsumerProvider
 import net.minecraft.client.render.block.entity.BlockEntityRenderer
-import net.minecraft.client.render.entity.EntityRendererFactory
+import net.minecraft.client.render.entity.model.PlayerEntityModel
 import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3f
 import talsumi.marderlib.util.RenderUtil
-import talsumi.statuesclassic.client.content.model.StatueModel
+import talsumi.statuesclassic.client.content.entity.StatuePlayerEntity
 import talsumi.statuesclassic.client.content.render.entity.StatuePlayerRenderer
 import talsumi.statuesclassic.client.core.SkinHandler
-import talsumi.statuesclassic.client.core.StatueModelHolder
+import talsumi.statuesclassic.client.core.StatueModels
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.core.StatueData
 import java.awt.Color
@@ -50,7 +47,7 @@ import java.util.*
 
 class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
 
-    private fun internalRender(statue: StatueBE?, data: StatueData, model: StatueModel, color: Color, renderer: StatuePlayerRenderer, matrices: MatrixStack, vertex: VertexConsumer, vertexProvider: VertexConsumerProvider, tickDelta: Float, overlay: Int, light: Int)
+    private fun internalRender(statue: StatueBE?, data: StatueData, model: PlayerEntityModel<StatuePlayerEntity>, color: Color, renderer: StatuePlayerRenderer, matrices: MatrixStack, vertex: VertexConsumer, vertexProvider: VertexConsumerProvider, tickDelta: Float, overlay: Int, light: Int)
     {
         matrices.push()
 
@@ -58,7 +55,7 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(180f))
 
         //Apply rotations from data. This will carry through into a PlayerEntityRenderer render call
-        model.setAngles(data)
+        StatueModels.setAngles(model, data)
 
         //Our AbstractClientPlayerEntity is a bit hacky and may not work with all mods, so don't crash if it doesn't!
         try {
@@ -93,7 +90,7 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
     {
         matrices.push()
         val snapshot = RenderUtil.getSnapshot()
-        val holder = StatueModelHolder
+        val holder = StatueModels
 
         val model = if (slim) holder.slimModel else holder.model
         val renderer = if (slim) holder.slimStatueRenderer else holder.statueRenderer
