@@ -114,7 +114,7 @@ abstract class StatuePlayerRenderer(ctx: EntityRendererFactory.Context?, slim: B
 
         //Render features
         for (feature in features) {
-            //if (SkippedFeatureRenderers.isSkipped(feature.javaClass)) continue
+            if (SkippedFeatureRenderers.isSkipped(feature.javaClass)) continue
             var feature = feature
 
             //Ignore vanilla's held item renderer and use our own that supports rotation
