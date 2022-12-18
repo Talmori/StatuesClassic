@@ -32,6 +32,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
 import net.minecraft.world.World
+import talsumi.marderlib.compat.MLCompatText
 import talsumi.statuesclassic.content.screen.StatueCreationScreenHandler
 import talsumi.statuesclassic.core.StatueHelper
 
@@ -39,7 +40,7 @@ class StatueHammerItem(settings: Settings) : Item(settings) {
 
     override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext)
     {
-        tooltip.add(Text.translatable("tooltip.statuesclassic.statue_hammer").formatted(Formatting.GRAY))
+        tooltip.add(MLCompatText.makeTranslatableText("tooltip.statuesclassic.statue_hammer").formatted(Formatting.GRAY))
     }
 
     override fun useOnBlock(ctx: ItemUsageContext): ActionResult

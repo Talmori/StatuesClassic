@@ -38,7 +38,7 @@ import talsumi.marderlib.screen.EnhancedScreen
 import talsumi.marderlib.screen.widget.BaseWidget
 import talsumi.marderlib.util.RenderUtil
 
-class JoystickWidget(x: Int, y: Int, width: Int, height: Int, val stickSize: Int, val u: Int, val v: Int, val screen: EnhancedScreen<*>, val tooltip: Text? = null, val leftSideTooltip: Boolean = false, val callback: (() -> Unit)? = null) : BaseWidget(x, y, width, height) {
+class JoystickWidget(screen: EnhancedScreen<*>, x: Int, y: Int, width: Int, height: Int, val stickSize: Int, val u: Int, val v: Int, val tooltip: Text? = null, val leftSideTooltip: Boolean = false, val callback: (() -> Unit)? = null) : BaseWidget(x, y, width, height, screen) {
 
     val workingWidth = width-stickSize
     val workingHeight = height-stickSize
@@ -56,30 +56,8 @@ class JoystickWidget(x: Int, y: Int, width: Int, height: Int, val stickSize: Int
         val snap = RenderUtil.getSnapshot()
         matrices.push()
 
-        //Render the joystick ourselves, vanilla's drawTexture rounds to integers.
-        RenderSystem.setShader { GameRenderer.getPositionTexShader() }
-        val bufferBuilder = Tessellator.getInstance().buffer
-        val matrix = matrices.peek().positionMatrix
+        RenderUtil.unboundDrawTexture(matrices, x, y, stickSize.toFloat(), stickSize.toFloat(), u, v)
 
-        val texWidth = 256f
-        val texHeight = 256f
-        val xMin = x
-        val xMax = x + stickSize
-        val yMin = y
-        val yMax = y + stickSize
-        val uMin = u / texWidth
-        val uMax = (u + stickSize) / texWidth
-        val vMin = v / texHeight
-        val vMax = (v + stickSize) / texHeight
-
-        bufferBuilder.begin(DrawMode.QUADS, VertexFormats.POSITION_TEXTURE)
-        bufferBuilder.vertex(matrix, xMin, yMax, zOffset.toFloat()).texture(uMin, vMax).next()
-        bufferBuilder.vertex(matrix, xMax, yMax, zOffset.toFloat()).texture(uMax, vMax).next()
-        bufferBuilder.vertex(matrix, xMax, yMin, zOffset.toFloat()).texture(uMax, vMin).next()
-        bufferBuilder.vertex(matrix, xMin, yMin, zOffset.toFloat()).texture(uMin, vMin).next()
-        BufferRenderer.drawWithShader(bufferBuilder.end())
-
-        matrices.pop()
         snap.restore()
     }
 
@@ -127,22 +105,25 @@ class JoystickWidget(x: Int, y: Int, width: Int, height: Int, val stickSize: Int
         return mouseX >= bounds.first.x && mouseX <= bounds.second.x && mouseY >= bounds.first.y && mouseY <= bounds.second.y
     }
 
-    override fun onLeftClicked(mouseX: Double, mouseY: Double)
+    override fun onMouseAction(mouseX: Double, mouseY: Double, button: Button, type: Type)
     {
-        selected = true
+        if (type == Type.PRESSED) {
+            if (button == Button.LEFT) {
+                selected = true
+            }
+            else {
+                //Reset stick to centre
+                stickX = workingWidth.toFloat()/2+halfStickSize
+                stickY = workingHeight.toFloat()/2+halfStickSize
+                callback?.invoke()
+            }
+
+        }
     }
 
-    override fun onRightClicked(mouseX: Double, mouseY: Double)
+    override fun onDragged(mouseX: Double, mouseY: Double, deltaX: Double, deltaY: Double, type: Button)
     {
-        //Reset stick to centre
-        stickX = workingWidth.toFloat()/2+halfStickSize
-        stickY = workingHeight.toFloat()/2+halfStickSize
-        callback?.invoke()
-    }
-
-    override fun onLeftDragged(mouseX: Double, mouseY: Double, deltaX: Double, deltaY: Double)
-    {
-        if (selected) {
+        if (type == Button.LEFT && selected) {
             stickX = (stickX + deltaX.toFloat()).coerceIn(halfStickSize, workingWidth+halfStickSize)
             stickY = (stickY + deltaY.toFloat()).coerceIn(halfStickSize, workingHeight+halfStickSize)
             callback?.invoke()

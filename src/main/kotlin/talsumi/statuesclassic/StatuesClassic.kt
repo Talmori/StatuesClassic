@@ -41,6 +41,7 @@ import talsumi.statuesclassic.content.ModItems
 import talsumi.statuesclassic.content.ModScreenHandlers
 import talsumi.statuesclassic.networking.ServerPacketHandlers
 
+//TODO: Compat with ears. Requires StatuePlayerRenderer to retrieve skin from StatuePlayerEntity & keeping 'trigger' area in mixed skins.
 @Suppress("UNUSED")
 object StatuesClassic: ModInitializer {
 

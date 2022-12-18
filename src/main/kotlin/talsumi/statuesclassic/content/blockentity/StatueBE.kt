@@ -40,6 +40,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
 import talsumi.marderlib.content.IUpdatableBlockEntity
+import talsumi.marderlib.networking.MarderLibServerPacketsOut
 import talsumi.marderlib.storage.SlotLimitations
 import talsumi.marderlib.storage.item.ItemStackHandler
 import talsumi.marderlib.util.BlockStateUtil
@@ -158,7 +159,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
     fun sendUpdatePacket()
     {
         for (player in PlayerLookup.tracking(this))
-            talsumi.marderlib.networking.ServerPacketsOut.sendUpdateBlockEntityPacket(this, player)
+            MarderLibServerPacketsOut.sendUpdateBlockEntityPacket(this, player)
     }
 
     private fun onContentsChanged()
