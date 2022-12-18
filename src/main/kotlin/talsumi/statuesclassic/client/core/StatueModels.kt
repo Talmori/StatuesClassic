@@ -29,6 +29,7 @@ import net.minecraft.client.model.Dilation
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.render.entity.EntityRendererFactory
 import net.minecraft.client.render.entity.model.PlayerEntityModel
+import talsumi.marderlib.compat.MLCompatRendering
 import talsumi.statuesclassic.client.content.entity.StatuePlayerEntity
 import talsumi.statuesclassic.client.content.render.entity.StatuePlayerRenderer
 import talsumi.statuesclassic.core.StatueData
@@ -43,7 +44,7 @@ object StatueModels {
     init
     {
         val mc = MinecraftClient.getInstance()
-        val ctx = EntityRendererFactory.Context(mc.entityRenderDispatcher, mc.itemRenderer, mc.resourceManager, mc.entityModelLoader, mc.textRenderer)
+        val ctx = MLCompatRendering.makeEntityRendererContext()
 
         model = object: PlayerEntityModel<StatuePlayerEntity>(getTexturedModelData(Dilation.NONE, false).root.createPart(64, 64), false) {
             init {

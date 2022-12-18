@@ -29,8 +29,8 @@ import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.client.content.entity.StatuePlayerEntity
+import talsumi.statuesclassic.content.blockentity.StatueBE
 
 object StatuePlayerEntityFactory {
 

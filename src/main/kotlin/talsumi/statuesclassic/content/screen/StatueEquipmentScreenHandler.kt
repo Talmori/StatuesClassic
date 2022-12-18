@@ -36,7 +36,6 @@ import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableText
 import talsumi.marderlib.screenhandler.EnhancedScreenHandler
 import talsumi.statuesclassic.content.ModBlockEntities
 import talsumi.statuesclassic.content.ModScreenHandlers
@@ -82,7 +81,7 @@ class StatueEquipmentScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val
                     return StatueEquipmentScreenHandler(syncId, inv, statue.inventory, statue)
                 }
                 override fun getDisplayName(): Text {
-                    return TranslatableText("")
+                    return Text.of("")
                 }
                 override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
                     buf.writeBlockPos(statue.pos)

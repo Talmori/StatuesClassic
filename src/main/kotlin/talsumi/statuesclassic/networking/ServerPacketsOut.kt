@@ -27,12 +27,9 @@ package talsumi.statuesclassic.networking
 import com.mojang.authlib.GameProfile
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import net.minecraft.block.entity.BlockEntity
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Identifier
-import net.minecraft.util.registry.Registry
 import talsumi.statuesclassic.StatuesClassic
-import java.util.*
 
 object ServerPacketsOut {
 

@@ -34,7 +34,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import talsumi.statuesclassic.content.blockentity.StatueBE
 import talsumi.statuesclassic.content.screen.StatueEquipmentScreenHandler
-import talsumi.statuesclassic.core.StatueHelper
 
 class StatueChildBlock(settings: Settings) : AbstractStatueBlock(settings) {
 

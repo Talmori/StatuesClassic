@@ -32,7 +32,6 @@ import net.minecraft.server.network.ServerPlayerEntity
 import talsumi.statuesclassic.StatuesClassic
 import java.util.*
 import java.util.concurrent.Executors
-import kotlin.collections.HashMap
 
 object UUIDLookups {
 

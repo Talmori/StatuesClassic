@@ -30,7 +30,9 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.*
+import net.minecraft.item.BlockItem
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.Hand
@@ -38,6 +40,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
 import talsumi.marderlib.content.IUpdatableBlockEntity
+import talsumi.marderlib.networking.MarderLibServerPacketsOut
 import talsumi.marderlib.storage.SlotLimitations
 import talsumi.marderlib.storage.item.ItemStackHandler
 import talsumi.marderlib.util.BlockStateUtil
@@ -45,9 +48,9 @@ import talsumi.marderlib.util.ItemStackUtil
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.content.ModBlockEntities
 import talsumi.statuesclassic.content.ModItems
-import talsumi.statuesclassic.core.StatuePlayerEntityFactory
-import talsumi.statuesclassic.core.StatueHelper
 import talsumi.statuesclassic.core.StatueData
+import talsumi.statuesclassic.core.StatueHelper
+import talsumi.statuesclassic.core.StatuePlayerEntityFactory
 import java.util.*
 
 class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.statue, pos, state), IUpdatableBlockEntity {
@@ -156,7 +159,7 @@ class StatueBE(pos: BlockPos, state: BlockState) : BlockEntity(ModBlockEntities.
     fun sendUpdatePacket()
     {
         for (player in PlayerLookup.tracking(this))
-            talsumi.marderlib.networking.ServerPacketsOut.sendUpdateBlockEntityPacket(this, player)
+            MarderLibServerPacketsOut.sendUpdateBlockEntityPacket(this, player)
     }
 
     private fun onContentsChanged()

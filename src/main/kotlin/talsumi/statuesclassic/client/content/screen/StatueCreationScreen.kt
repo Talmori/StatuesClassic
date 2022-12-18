@@ -29,7 +29,6 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.DrawableHelper
 import net.minecraft.client.gui.widget.TextFieldWidget
 import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.OverlayTexture
@@ -37,9 +36,10 @@ import net.minecraft.client.util.DefaultSkinHelper
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableText
 import net.minecraft.util.Identifier
+import talsumi.marderlib.compat.MLCompatText
 import talsumi.marderlib.screen.EnhancedScreen
+import talsumi.marderlib.screen.widget.BaseWidget
 import talsumi.marderlib.util.RenderUtil
 import talsumi.statuesclassic.StatuesClassic
 import talsumi.statuesclassic.client.content.render.blockentity.StatueBERenderer
@@ -87,23 +87,23 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     {
         backgroundWidth = 198
         backgroundHeight = 208
-        joystick1 = JoystickWidget(145, 7, 48, 48, 14, 198, 0, this,
-            TranslatableText("gui.statuesclassic.joystick.creation_left_arm"),  callback = ::joystickChange)
-        joystick2 = JoystickWidget(5, 7, 48, 48, 14, 198, 0, this,
-            TranslatableText("gui.statuesclassic.joystick.creation_right_arm"), true, callback = ::joystickChange)
-        joystick3 = JoystickWidget(145, 59, 48, 48, 14, 198, 0, this,
-            TranslatableText("gui.statuesclassic.joystick.creation_left_leg"), callback = ::joystickChange)
-        joystick4 = JoystickWidget(5, 59, 48, 48, 14, 198, 0, this,
-            TranslatableText("gui.statuesclassic.joystick.creation_right_leg"), true, callback = ::joystickChange)
-        joystick5 = JoystickWidget(5, 111, 48, 48, 14, 198, 0, this,
-            TranslatableText("gui.statuesclassic.joystick.creation_head"), true, callback = ::joystickChange)
-        joystick6 = JoystickWidget(145, 111, 48, 48, 14, 198, 0, this,
-            TranslatableText("gui.statuesclassic.joystick.creation_body"), callback = ::joystickChange)
-        val randomizeButton = ButtonWidget(4, 162, 190, 20, 0, 208, ::randomize, {TranslatableText("gui.statuesclassic.randomize")})
-        val formButton = object: ButtonWidget(4, 184, 190, 20, 0, 208, ::form, {TranslatableText("gui.statuesclassic.sculpt")}, { uuid != null }) {
+        joystick1 = JoystickWidget(this, 145, 7, 48, 48, 14, 198, 0,
+            MLCompatText.makeTranslatableText("gui.statuesclassic.joystick.creation_left_arm"),  callback = ::joystickChange)
+        joystick2 = JoystickWidget(this, 5, 7, 48, 48, 14, 198, 0,
+            MLCompatText.makeTranslatableText("gui.statuesclassic.joystick.creation_right_arm"), true, callback = ::joystickChange)
+        joystick3 = JoystickWidget(this, 145, 59, 48, 48, 14, 198, 0,
+            MLCompatText.makeTranslatableText("gui.statuesclassic.joystick.creation_left_leg"), callback = ::joystickChange)
+        joystick4 = JoystickWidget(this, 5, 59, 48, 48, 14, 198, 0,
+            MLCompatText.makeTranslatableText("gui.statuesclassic.joystick.creation_right_leg"), true, callback = ::joystickChange)
+        joystick5 = JoystickWidget(this, 5, 111, 48, 48, 14, 198, 0,
+            MLCompatText.makeTranslatableText("gui.statuesclassic.joystick.creation_head"), true, callback = ::joystickChange)
+        joystick6 = JoystickWidget(this, 145, 111, 48, 48, 14, 198, 0,
+            MLCompatText.makeTranslatableText("gui.statuesclassic.joystick.creation_body"), callback = ::joystickChange)
+        val randomizeButton = ButtonWidget(this, 4, 162, 190, 20, 0, 208, ::randomize, {MLCompatText.makeTranslatableText("gui.statuesclassic.randomize")})
+        val formButton = object: ButtonWidget(this, 4, 184, 190, 20, 0, 208, ::form, {MLCompatText.makeTranslatableText("gui.statuesclassic.sculpt")}, { uuid != null }) {
             override fun getTooltip(): List<Text>?
             {
-                return if (uuid == null) listOf(TranslatableText("gui.statuesclassic.sculpt_invalid")) else null
+                return if (uuid == null) listOf(MLCompatText.makeTranslatableText("gui.statuesclassic.sculpt_invalid")) else null
             }
         }
 
@@ -115,7 +115,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     override fun init()
     {
         super.init()
-        nameField = TextFieldWidget(textRenderer, x+59, y+139, 80, 12, TranslatableText("gui.statuesclassic.player_name_field"))
+        nameField = TextFieldWidget(textRenderer, x+59, y+139, 80, 12, MLCompatText.makeTranslatableText("gui.statuesclassic.player_name_field"))
         nameField.setEditable(true)
         nameField.setEditableColor(-1)
         nameField.setUneditableColor(-1)
@@ -223,11 +223,11 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
         val middleY = y+backgroundHeight/2.0
         drawModel(matrices, 45f, middleX, middleY-65f, mouseX, mouseY, delta)
 
-        //Render ui
+        //Render UI
         super.drawBackground(matrices, delta, mouseX, mouseY)
 
         //Draw text
-        drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, TranslatableText("gui.statuesclassic.username"), x+99, y+125, 16777215)
+        drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, MLCompatText.makeTranslatableText("gui.statuesclassic.username"), x+99, y+125, 16777215)
     }
 
     private fun drawModel(matrices: MatrixStack, size: Float, x: Double, y: Double, mouseX: Int, mouseY: Int, delta: Float)
@@ -276,11 +276,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
     {
         var dragged = false
         for (widget in widgets) {
-            widget.onGeneralDragged(mouseX, mouseY, deltaX, deltaY)
-            if (button == 0)
-                widget.onLeftDragged(mouseX, mouseY, deltaX, deltaY)
-            else
-                widget.onRightDragged(mouseX, mouseY, deltaX, deltaY)
+            widget.onDragged(mouseX, mouseY, deltaX, deltaY, if (button == 0) BaseWidget.Button.LEFT else BaseWidget.Button.RIGHT)
 
             dragged = true
         }

@@ -28,10 +28,11 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawableHelper
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
+import talsumi.marderlib.screen.EnhancedScreen
 import talsumi.marderlib.screen.widget.BaseWidget
 import talsumi.marderlib.util.RenderUtil
 
-open class ButtonWidget(x: Int, y: Int, width: Int, height: Int, val u: Int, val v: Int, val function: (() -> Unit)? = null, val text: (() -> Text)? = null, val isActive: (() -> Boolean)? = null) : BaseWidget(x, y, width, height) {
+open class ButtonWidget( screen: EnhancedScreen<*>, x: Int, y: Int, width: Int, height: Int, val u: Int, val v: Int, val function: (() -> Unit)? = null, val text: (() -> Text)? = null, val isActive: (() -> Boolean)? = null) : BaseWidget(x, y, width, height, screen) {
 
     override fun doRender(matrices: MatrixStack, x: Int, y: Int, mouseX: Int, mouseY: Int, delta: Float)
     {
@@ -57,8 +58,9 @@ open class ButtonWidget(x: Int, y: Int, width: Int, height: Int, val u: Int, val
         snap.restore()
     }
 
-    override fun onLeftClicked(mouseX: Double, mouseY: Double)
+    override fun onMouseAction(mouseX: Double, mouseY: Double, button: Button, type: Type)
     {
-        function?.invoke()
+        if (button == Button.LEFT && type == Type.PRESSED)
+            function?.invoke()
     }
 }
