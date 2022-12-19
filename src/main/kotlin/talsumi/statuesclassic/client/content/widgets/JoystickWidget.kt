@@ -38,7 +38,7 @@ import talsumi.marderlib.screen.EnhancedScreen
 import talsumi.marderlib.screen.widget.BaseWidget
 import talsumi.marderlib.util.RenderUtil
 
-class JoystickWidget(screen: EnhancedScreen<*>, x: Int, y: Int, width: Int, height: Int, val stickSize: Int, val u: Int, val v: Int, val tooltip: Text? = null, val leftSideTooltip: Boolean = false, val callback: (() -> Unit)? = null) : BaseWidget(x, y, width, height, screen) {
+class JoystickWidget(screenIn: EnhancedScreen<*>, x: Int, y: Int, width: Int, height: Int, val stickSize: Int, val u: Int, val v: Int, val tooltip: Text? = null, val leftSideTooltip: Boolean = false, val callback: (() -> Unit)? = null) : BaseWidget(x, y, width, height, screenIn) {
 
     val workingWidth = width-stickSize
     val workingHeight = height-stickSize

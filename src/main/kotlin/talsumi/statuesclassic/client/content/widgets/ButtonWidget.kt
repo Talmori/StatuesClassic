@@ -32,7 +32,7 @@ import talsumi.marderlib.screen.EnhancedScreen
 import talsumi.marderlib.screen.widget.BaseWidget
 import talsumi.marderlib.util.RenderUtil
 
-open class ButtonWidget( screen: EnhancedScreen<*>, x: Int, y: Int, width: Int, height: Int, val u: Int, val v: Int, val function: (() -> Unit)? = null, val text: (() -> Text)? = null, val isActive: (() -> Boolean)? = null) : BaseWidget(x, y, width, height, screen) {
+open class ButtonWidget(screenIn: EnhancedScreen<*>, x: Int, y: Int, width: Int, height: Int, val u: Int, val v: Int, val function: (() -> Unit)? = null, val text: (() -> Text)? = null, val isActive: (() -> Boolean)? = null) : BaseWidget(x, y, width, height, screenIn) {
 
     override fun doRender(matrices: MatrixStack, x: Int, y: Int, mouseX: Int, mouseY: Int, delta: Float)
     {
