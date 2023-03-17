@@ -26,7 +26,7 @@ import net.minecraft.item.Items
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
 import net.minecraft.util.Arm
-import net.minecraft.util.math.Vec3f
+import net.minecraft.util.math.RotationAxis
 import net.minecraft.world.RaycastContext
 import talsumi.statuesclassic.client.compat.SkippedFeatureRenderers
 import talsumi.statuesclassic.client.core.StatueModels
@@ -72,15 +72,15 @@ abstract class StatuePlayerRenderer(ctx: EntityRendererFactory.Context?, slim: B
         //Rotate to match statue facing
         val facing = statue.cachedState.get(Properties.HORIZONTAL_FACING)
         var rotate = facing.asRotation()
-        matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rotate))
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotate))
 
         //Apply height offset
         matrices.translate(0.0, data.heightOffset.toDouble(), 0.0)
 
         //Apply master rotation
         matrices.translate(0.0, 1.0, 0.0)
-        matrices.multiply(Vec3f.POSITIVE_Y.getRadialQuaternion(data.masterRotate))
-        matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(data.masterRaise))
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotation(data.masterRotate))
+        matrices.multiply(RotationAxis.POSITIVE_X.rotation(data.masterRaise))
         matrices.translate(0.0, -1.0, 0.0)
 
         matrices.push()
@@ -145,14 +145,14 @@ class StatueHeldItemFeatureRenderer<T, M>(context: FeatureRendererContext<T, M>,
         if (!stack.isEmpty) {
             matrices.push()
             (this.contextModel as ModelWithArms).setArmAngle(arm, matrices)
-            matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-90.0f))
-            matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180.0f))
+            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-90.0f))
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f))
             val bl = arm == Arm.LEFT
             matrices.translate(((if (bl) -1 else 1).toFloat() / 16.0f).toDouble(), 0.0, 0.0) //Centre on arm
             matrices.translate(0.0, 0.0, -0.5) //Move down arm
             val rotation = if (arm == Arm.RIGHT) rightRotation else leftRotation
 
-            matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(if (rotation < 0) rotation * 2 else rotation)) //Rotate item
+            matrices.multiply(RotationAxis.POSITIVE_X.rotation(if (rotation < 0) rotation * 2 else rotation)) //Rotate item
             matrices.translate(0.0, 0.125, -0.125) //Centre item on rotation
             heldItemRenderer.renderItem(entity, stack, transformationMode, bl, matrices, vertexConsumers, light)
             matrices.pop()
@@ -166,9 +166,9 @@ class StatueCapeFeatureRenderer(context: FeatureRendererContext<AbstractClientPl
         if (player.canRenderCapeTexture() && player.isPartVisible(PlayerModelPart.CAPE) && player.capeTexture != null && !player.getEquippedStack(EquipmentSlot.CHEST).isOf(Items.ELYTRA)) {
 
             matrices.push()
-            matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180.0f))
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0f))
             matrices.translate(0.0, 0.0, -0.16)
-            matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-8.0f))
+            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-8.0f))
             val vertexes = vertexConsumerProvider.getBuffer(RenderLayer.getEntitySolid(player.capeTexture))
             (this.contextModel as PlayerEntityModel<*>).renderCape(matrices, vertexes, light, OverlayTexture.DEFAULT_UV)
             matrices.pop()

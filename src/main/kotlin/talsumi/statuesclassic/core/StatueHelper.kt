@@ -6,7 +6,7 @@ import net.minecraft.state.property.Properties
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3f
+import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
 import talsumi.marderlib.util.VectorUtil
 import talsumi.statuesclassic.content.ModBlocks
@@ -123,12 +123,10 @@ object StatueHelper {
         data.masterRaise = joystick6Y
         data.masterRotate = -joystick6X
 
-        val rightLegHeightOffset = Vec3f(0f, 0.5f, 0f)
-        rightLegHeightOffset.add(VectorUtil.multiply(Vec3f(0f, data.rightLegRaise, 0f), 1f, 0.75f, 1f))
-        val leftLegHeightOffset = Vec3f(0f, 0.5f, 0f)
-        leftLegHeightOffset.add(VectorUtil.multiply(Vec3f(0f, data.leftLegRaise, 0f), 1f, 0.75f, 1f))
+        val rightLegHeightOffset = Vec3d(0.0, 0.5, 0.0).add(Vec3d(1.0, 0.75, 1.0).multiply(0.0, data.rightLegRaise.toDouble(), 0.0))
+        val leftLegHeightOffset = Vec3d(0.0, 0.5, 0.0).add(Vec3d(1.0, 0.75, 1.0).multiply(0.0, data.leftLegRaise.toDouble(), 0.0))
 
-        data.heightOffset = -(rightLegHeightOffset.y.coerceAtLeast(leftLegHeightOffset.y) + 0.05f).coerceAtMost(0f)
+        data.heightOffset = -(rightLegHeightOffset.y.coerceAtLeast(leftLegHeightOffset.y) + 0.05f).coerceAtMost(0.0).toFloat()
     }
 
     /**

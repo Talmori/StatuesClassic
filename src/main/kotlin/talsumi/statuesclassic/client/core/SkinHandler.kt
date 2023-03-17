@@ -241,7 +241,8 @@ object SkinHandler {
         val sprite = mc.blockRenderManager.getModel(block).particleSprite
         var resource: Resource? = null
         try {
-            resource = mc.resourceManager.getResource(Identifier(sprite.id.namespace, "textures/${sprite.id.path}.png")).orElse(null)
+            val id = sprite.contents.id
+            resource = mc.resourceManager.getResource(Identifier(id.namespace, "textures/${id.path}.png")).orElse(null)
 
             if (resource != null)
                 return resource.inputStream
@@ -251,6 +252,7 @@ object SkinHandler {
             null
         }
 
+        StatuesClassic.LOGGER.warn("Couldn't find texture for block $block, using missing texture.")
         return (mc.resourceManager.getResource(missingTexture).orElseThrow{ IllegalStateException("Missing texture is missing! What?") }).inputStream
     }
 

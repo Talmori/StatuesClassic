@@ -2,14 +2,12 @@ package talsumi.statuesclassic.client.content.widgets
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
-import net.minecraft.client.render.BufferRenderer
-import net.minecraft.client.render.GameRenderer
-import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.*
 import net.minecraft.client.render.VertexFormat.DrawMode
-import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
 import net.minecraft.util.math.Vec2f
+import talsumi.marderlib.compat.MLCompatRendering
 import talsumi.marderlib.screen.EnhancedScreen
 import talsumi.marderlib.screen.widget.BaseWidget
 import talsumi.marderlib.util.RenderUtil
@@ -32,7 +30,7 @@ class JoystickWidget(screen: EnhancedScreen<*>, x: Int, y: Int, width: Int, heig
         val snap = RenderUtil.getSnapshot()
         matrices.push()
 
-        RenderUtil.unboundDrawTexture(matrices, x, y, stickSize.toFloat(), stickSize.toFloat(), u, v)
+        unboundDrawTexture(matrices, x, y, stickSize.toFloat(), stickSize.toFloat(), u, v)
 
         snap.restore()
     }
@@ -107,4 +105,33 @@ class JoystickWidget(screen: EnhancedScreen<*>, x: Int, y: Int, width: Int, heig
     }
 
     override fun getTooltip(): List<Text>? = if (tooltip != null) listOf(tooltip) else null
+
+    fun unboundDrawTexture(matrices: MatrixStack, x: Float, y: Float, width: Float, height: Float, u: Int, v: Int, zOffset: Float = 0f, texWidth: Float = 256f, texHeight: Float = 256f)
+    {
+        val snap = RenderUtil.getSnapshot()
+        matrices.push()
+
+        RenderSystem.setShader(GameRenderer::getPositionTexProgram)
+        val bufferBuilder = Tessellator.getInstance().buffer
+        val matrix = matrices.peek().positionMatrix
+
+        val xMin = x
+        val xMax = x + width
+        val yMin = y
+        val yMax = y + height
+        val uMin = u / texWidth
+        val uMax = (u + width) / texWidth
+        val vMin = v / texHeight
+        val vMax = (v + height) / texHeight
+
+        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE)
+        bufferBuilder.vertex(matrix, xMin, yMax, zOffset).texture(uMin, vMax).next()
+        bufferBuilder.vertex(matrix, xMax, yMax, zOffset).texture(uMax, vMax).next()
+        bufferBuilder.vertex(matrix, xMax, yMin, zOffset).texture(uMax, vMin).next()
+        bufferBuilder.vertex(matrix, xMin, yMin, zOffset).texture(uMin, vMin).next()
+        BufferRenderer.drawWithGlobalProgram(bufferBuilder.end())
+
+        matrices.pop()
+        snap.restore()
+    }
 }

@@ -47,7 +47,7 @@ class StatueCreationScreenHandler(type: ScreenHandlerType<*>?, syncId: Int, val 
         return true
     }
 
-    override fun transferSlot(player: PlayerEntity, index: Int): ItemStack = ItemStack.EMPTY
+    override fun quickMove(player: PlayerEntity?, slot: Int): ItemStack = ItemStack.EMPTY
 
     companion object {
         fun makeFactory(player: PlayerEntity, hitFace: Direction, pos: BlockPos, world: World): ExtendedScreenHandlerFactory

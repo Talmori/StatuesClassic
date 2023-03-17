@@ -10,7 +10,7 @@ import net.minecraft.client.render.block.entity.BlockEntityRenderer
 import net.minecraft.client.render.entity.model.PlayerEntityModel
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Identifier
-import net.minecraft.util.math.Vec3f
+import net.minecraft.util.math.RotationAxis
 import talsumi.marderlib.util.RenderUtil
 import talsumi.statuesclassic.client.content.entity.StatuePlayerEntity
 import talsumi.statuesclassic.client.content.render.entity.StatuePlayerRenderer
@@ -28,7 +28,7 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
         matrices.push()
 
         //Flip so we aren't upside down
-        matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(180f))
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(180f))
 
         //Apply rotations from data. This will carry through into a PlayerEntityRenderer render call
         StatueModels.setAngles(model, data)
@@ -46,8 +46,8 @@ class StatueBERenderer(): BlockEntityRenderer<StatueBE> {
 
                 //Apply master rotation
                 matrices.translate(0.0, 1.0, 0.0)
-                matrices.multiply(Vec3f.POSITIVE_Y.getRadialQuaternion(data.masterRotate))
-                matrices.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(data.masterRaise))
+                matrices.multiply(RotationAxis.POSITIVE_Y.rotation(data.masterRotate))
+                matrices.multiply(RotationAxis.POSITIVE_X.rotation(data.masterRaise))
                 matrices.translate(0.0, -1.0, 0.0)
 
                 model.render(matrices, vertex, light, overlay, color.red / 255f, color.green / 255f, color.blue / 255f, color.alpha / 255f)

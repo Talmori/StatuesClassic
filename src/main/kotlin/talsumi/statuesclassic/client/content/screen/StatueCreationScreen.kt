@@ -230,7 +230,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
 
         val immediate = MinecraftClient.getInstance().bufferBuilders.entityVertexConsumers
         RenderSystem.runAsFancy {
-            renderer.render(null, data, block, uuid, skinData?.slim ?: false, skin, delta, ourMatrix, immediate, fullbright, OverlayTexture.DEFAULT_UV)
+            renderer.render(null, data, block, uuid, skinData?.slim ?: true, skin, delta, ourMatrix, immediate, fullbright, OverlayTexture.DEFAULT_UV)
         }
         immediate.draw()
 
