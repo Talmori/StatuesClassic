@@ -204,7 +204,7 @@ class StatueCreationScreen(handler: StatueCreationScreenHandler, inventory: Play
         super.drawBackground(matrices, delta, mouseX, mouseY)
 
         //Draw text
-        drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, MLCompatText.makeTranslatableText("gui.statuesclassic.username"), x+99, y+125, 16777215)
+        DrawableHelper.drawCenteredTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, MLCompatText.makeTranslatableText("gui.statuesclassic.username"), x+99, y+125, 16777215)
     }
 
     private fun drawModel(matrices: MatrixStack, size: Float, x: Double, y: Double, mouseX: Int, mouseY: Int, delta: Float)

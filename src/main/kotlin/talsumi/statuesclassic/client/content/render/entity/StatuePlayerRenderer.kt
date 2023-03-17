@@ -18,6 +18,7 @@ import net.minecraft.client.render.entity.model.ModelWithHead
 import net.minecraft.client.render.entity.model.PlayerEntityModel
 import net.minecraft.client.render.item.HeldItemRenderer
 import net.minecraft.client.render.model.json.ModelTransformation
+import net.minecraft.client.render.model.json.ModelTransformationMode
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
@@ -140,7 +141,7 @@ class StatueHeldItemFeatureRenderer<T, M>(context: FeatureRendererContext<T, M>,
     var rightRotation = 0f
     var leftRotation = 0f
 
-    override fun renderItem(entity: LivingEntity, stack: ItemStack, transformationMode: ModelTransformation.Mode, arm: Arm, matrices: MatrixStack, vertexConsumers: VertexConsumerProvider, light: Int)
+    override fun renderItem(entity: LivingEntity, stack: ItemStack, transformationMode: ModelTransformationMode, arm: Arm, matrices: MatrixStack, vertexConsumers: VertexConsumerProvider, light: Int)
     {
         if (!stack.isEmpty) {
             matrices.push()

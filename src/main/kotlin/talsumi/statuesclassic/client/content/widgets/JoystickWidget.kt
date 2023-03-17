@@ -134,4 +134,8 @@ class JoystickWidget(screen: EnhancedScreen<*>, x: Int, y: Int, width: Int, heig
         matrices.pop()
         snap.restore()
     }
+
+
+    override fun isFocused(): Boolean = false
+    override fun setFocused(focused: Boolean) = Unit
 }

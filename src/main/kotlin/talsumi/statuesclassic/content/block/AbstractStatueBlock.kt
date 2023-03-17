@@ -52,8 +52,6 @@ abstract class AbstractStatueBlock(settings: Settings) : Block(settings), Waterl
         return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
     }
 
-    override fun isTranslucent(state: BlockState?, world: BlockView?, pos: BlockPos?): Boolean = true
-
     override fun getRenderType(state: BlockState?): BlockRenderType? = BlockRenderType.INVISIBLE
 
     override fun getAmbientOcclusionLightLevel(state: BlockState?, world: BlockView?, pos: BlockPos?): Float = 1f

@@ -28,7 +28,7 @@ open class ButtonWidget( screen: EnhancedScreen<*>, x: Int, y: Int, width: Int, 
         if (isHovered(x, y, mouseX, mouseY) || !active)
             drawTexture(matrices, x, y, u, v, width, height)
 
-        text?.invoke().let { DrawableHelper.drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, it, x + width / 2, y + (height - 8) / 2,  16777215) }
+        text?.invoke().let { drawCenteredTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, it, x + width / 2, y + (height - 8) / 2,  16777215) }
 
         matrices.pop()
         snap.restore()
@@ -39,4 +39,7 @@ open class ButtonWidget( screen: EnhancedScreen<*>, x: Int, y: Int, width: Int, 
         if (button == Button.LEFT && type == Type.PRESSED)
             function?.invoke()
     }
+
+    override fun isFocused(): Boolean = false
+    override fun setFocused(focused: Boolean) = Unit
 }
