@@ -4,10 +4,7 @@ import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
 import net.minecraft.block.Block
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.item.Item
-import net.minecraft.item.ItemGroup
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
+import net.minecraft.item.*
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import org.apache.logging.log4j.LogManager
@@ -25,7 +22,6 @@ object StatuesClassic: ModInitializer {
     const val MODID = "statuesclassic"
 
     val LOGGER: Logger = LogManager.getLogger()
-    val GROUP: ItemGroup = FabricItemGroup.builder(Identifier(MODID, MODID)).icon { ItemStack(Items.PLAYER_HEAD) }.build()
 
     override fun onInitialize() {
         val sTime = System.currentTimeMillis()
@@ -36,7 +32,7 @@ object StatuesClassic: ModInitializer {
 
         ModBlockEntities.regAll(Registries.BLOCK_ENTITY_TYPE, BlockEntityType::class, MODID)
 
-        ItemGroupEvents.modifyEntriesEvent(GROUP).register {
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.TOOLS).register {
             it.add(ModItems.statue_hammer)
             it.add(ModItems.palette)
         }
