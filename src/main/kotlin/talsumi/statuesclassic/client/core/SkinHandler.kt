@@ -68,13 +68,12 @@ object SkinHandler {
 
                         if (tries <= 0) {
                             mc.renderTaskQueue.add { makeMixedSkin(DefaultSkinHelper.getTexture(), uuid, block, holder) }
-                            StatuesClassic.LOGGER.warn("Could not get skin for $uuid in time for mixing. Aborting and using the default skin.")
                             break
                         }
 
 
                         if (skin == null) {
-                            Thread.sleep(if (firstSleep) 20 else 250)
+                            Thread.sleep(if (firstSleep) 20 else 500)
                             firstSleep = false
                             tries--
                         }
@@ -90,63 +89,6 @@ object SkinHandler {
             texturedCache[key] = holder
             holder.tex
         }
-
-        /*if (uuid == null) {
-            //If cache contains the key, the texture is either processing or created.
-            if (texturedCache.containsKey(key)) {
-                return texturedCache[key]?.tex
-            }
-            else {
-                val holder = AsyncHolder(null)
-                makeTexturedSkin(DefaultSkinHelper.getTexture(), baseUUID, block, holder)
-                texturedCache[key] = holder
-                return holder.tex
-            }
-        }
-        else {
-            return if (texturedCache.containsKey(key)) {
-                texturedCache[key]?.tex
-            } else {
-                val holder = AsyncHolder(null)
-                //This will fill [holder] with the skin when it is ready, some time in the future.
-                getCachedSkin(uuid, Callback() { makeTexturedSkin(it.skin!!, baseUUID, block, holder) })
-                texturedCache[key] = holder
-                holder.tex
-            }
-        }*/
-        /*val key = Pair(uuid ?: baseUUID, block)
-        if (!texturedCache.containsKey(key)) {
-            val holder = AsyncHolder(null)
-
-            val base = (if (uuid != null) getCachedSkin(uuid)?.skin else DefaultSkinHelper.getTexture()) ?: return null
-            makeTexturedSkin(base, uuid ?: baseUUID, block, holder)
-
-
-            texturedCache[key] = holder
-            return holder.tex
-        }
-        else {
-            return texturedCache[key]!!.tex
-        }*/
-        /*
-        val key = Pair(uuid ?: baseUUID, block)
-        if (!texturedCache.containsKey(key)) {
-            val data = if (uuid != null) makeTexturedSkin() getCachedSkin(uuid) else return null
-
-            if (data)
-            if (data.complete != null && uuid != null) {
-                val holder = AsyncHolder(null)
-                makeTexturedSkin(base, uuid, block, holder)
-                texturedCache[key] = holder
-                return holder.tex
-            }
-
-            return null
-        }
-        else {
-            return texturedCache[key]!!.tex
-        }
-         */
     }
 
     //TODO: In the future, maybe make > 64x64 skins out of > 16x16 textures.
@@ -266,13 +208,13 @@ object SkinHandler {
             val data = SkinData(null, null, null, null)
             cache[uuid] = data
 
-            loadSkin(uuid, Type.SKIN) {
+            loadSkin(uuid, Type.SKIN, {
                     id, tex ->
-                data!!.skin = id
-                data!!.slim = tex.getMetadata("model") == "slim"
-            }
-            loadSkin(uuid, Type.CAPE) { id, tex -> data!!.cape = id }
-            loadSkin(uuid, Type.ELYTRA) { id, tex -> data!!.elytra = id }
+                data.skin = id
+                data.slim = tex.getMetadata("model") == "slim"
+            },
+                { id, tex -> data.cape = id },
+                { id, tex -> data.elytra = id })
 
             return data
         }
@@ -282,14 +224,17 @@ object SkinHandler {
         }
     }
 
-    fun loadSkin(uuid: UUID, type: Type, whenReady: (Identifier, MinecraftProfileTexture) -> Unit)
+    fun loadSkin(uuid: UUID, type: Type, skinLoaded: (Identifier, MinecraftProfileTexture) -> Unit, capeLoaded: (Identifier, MinecraftProfileTexture) -> Unit, elytraLoaded: (Identifier, MinecraftProfileTexture) -> Unit)
     {
         MinecraftClient.getInstance().skinProvider.loadSkin(
             GameProfile(uuid, null),
             { textureType, id, mcProfileTexture ->
                 run {
-                    if (textureType == type)
-                        whenReady.invoke(id, mcProfileTexture)
+                    when (textureType) {
+                        Type.SKIN -> skinLoaded.invoke(id, mcProfileTexture)
+                        Type.CAPE -> capeLoaded.invoke(id, mcProfileTexture)
+                        Type.ELYTRA -> elytraLoaded.invoke(id, mcProfileTexture)
+                    }
                 }
             }, true
         )
