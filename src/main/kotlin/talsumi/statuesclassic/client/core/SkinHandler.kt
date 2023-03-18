@@ -75,7 +75,7 @@ object SkinHandler {
 
 
                         if (skin == null) {
-                            Thread.sleep(if (firstSleep) 20 else 250)
+                            Thread.sleep(if (firstSleep) 20 else 500)
                             firstSleep = false
                             tries--
                         }
@@ -269,13 +269,13 @@ object SkinHandler {
             val data = SkinData(null, null, null, null)
             cache[uuid] = data
 
-            loadSkin(uuid, Type.SKIN) {
+            loadSkin(uuid, Type.SKIN, {
                     id, tex ->
-                data!!.skin = id
-                data!!.slim = tex.getMetadata("model") == "slim"
-            }
-            loadSkin(uuid, Type.CAPE) { id, tex -> data!!.cape = id }
-            loadSkin(uuid, Type.ELYTRA) { id, tex -> data!!.elytra = id }
+                data.skin = id
+                data.slim = tex.getMetadata("model") == "slim"
+            },
+                { id, tex -> data.cape = id },
+                { id, tex -> data.elytra = id })
 
             return data
         }
@@ -285,14 +285,17 @@ object SkinHandler {
         }
     }
 
-    fun loadSkin(uuid: UUID, type: Type, whenReady: (Identifier, MinecraftProfileTexture) -> Unit)
+    fun loadSkin(uuid: UUID, type: Type, skinLoaded: (Identifier, MinecraftProfileTexture) -> Unit, capeLoaded: (Identifier, MinecraftProfileTexture) -> Unit, elytraLoaded: (Identifier, MinecraftProfileTexture) -> Unit)
     {
         MinecraftClient.getInstance().skinProvider.loadSkin(
             GameProfile(uuid, null),
             { textureType, id, mcProfileTexture ->
                 run {
-                    if (textureType == type)
-                        whenReady.invoke(id, mcProfileTexture)
+                    when (textureType) {
+                        Type.SKIN -> skinLoaded.invoke(id, mcProfileTexture)
+                        Type.CAPE -> capeLoaded.invoke(id, mcProfileTexture)
+                        Type.ELYTRA -> elytraLoaded.invoke(id, mcProfileTexture)
+                    }
                 }
             }, true
         )
